@@ -92,10 +92,14 @@ function testEnvironmentVariables() {
   console.log('\n🔑 Checking environment variables...');
   
   const required = [
-    'DATABASE_URL',
-    'REDIS_URL'
+    'DATABASE_URL'
   ];
   
+  if (!process.env.REDIS_URL && !process.env.REDIS_HOST) {
+     console.log('❌ REDIS_URL or REDIS_HOST: Missing (At least one is REQUIRED)');
+     return false;
+  }
+
   const optional = [
     'MINIMAX_API_KEY',
     'OPENAI_API_KEY',

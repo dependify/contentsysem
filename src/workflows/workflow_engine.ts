@@ -27,6 +27,7 @@ export interface WorkflowResult<T = any> {
   error?: string;
   stepResults?: Record<string, StepResult>;
   totalDuration?: number;
+  lastStep?: string;
 }
 
 /**
@@ -113,7 +114,8 @@ export class Workflow {
           success: false,
           error: `Step '${step.name}' failed: ${lastError?.message || 'Unknown error'}`,
           stepResults,
-          totalDuration: Date.now() - startTime
+          totalDuration: Date.now() - startTime,
+          lastStep: step.name
         };
       }
 
