@@ -11,6 +11,7 @@ import { authenticate } from './middleware/auth';
 import { validate } from './middleware/validation';
 import { errorHandler } from './middleware/error_handler';
 import { z } from 'zod';
+import path from 'path';
 
 dotenv.config();
 
@@ -18,7 +19,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for development simplicity with inline scripts/styles if needed
+}));
 app.use(cors());
 app.use(express.json());
 app.use(morgan('combined', {
@@ -28,16 +31,16 @@ app.use(morgan('combined', {
 // Apply authentication to API routes (excluding health)
 app.use('/api', authenticate);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to ContentSys API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      docs: '/api'
-    }
-  });
+// Serve static files from the React client
+const clientDistPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientDistPath));
+
+// Handle React routing, return all requests to React app (except API)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path === '/health') {
+    return next();
+  }
+  res.sendFile(path.join(clientDistPath, 'index.html'));
 });
 
 // Health check endpoint

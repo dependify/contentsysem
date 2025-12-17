@@ -1,0 +1,64 @@
+
+> contentsys@1.0.0 start
+> node dist/index.js
+
+[Worker] ContentSys worker started and listening for jobs...
+Database schema initialized successfully
+✅ Database schema initialized
+[Scheduler] Content scheduler started
+✅ Content scheduler started
+✅ ContentSys API server running on port 3000
+📊 Health check: http://localhost:3000/health
+📚 API docs: http://localhost:3000/api
+[Scheduler] Found 1 items to process
+[Worker] Processing job 8: Test Title
+[Scheduler] Queued: Test Title for Test Company
+[Worker] Starting content generation workflow...
+[Workflow:ContentSys-Engine] Starting execution with 5 steps
+[Workflow:ContentSys-Engine] Executing step: nexus
+[Nexus] Starting strategy for: Test Title
+[Workflow:ContentSys-Engine] Step nexus failed, retrying (1/2)...
+[Nexus] Starting strategy for: Test Title
+[Workflow:ContentSys-Engine] Step nexus failed after all retries
+[Worker] Job 8 failed: Error: Content workflow failed: Step 'nexus' failed: Directive not found: 01_nexus_strategist.md
+    at Worker.processFn (/app/dist/worker.js:97:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Worker.processJob (/app/node_modules/bullmq/dist/cjs/classes/worker.js:394:28)
+    at async Worker.retryIfFailed (/app/node_modules/bullmq/dist/cjs/classes/worker.js:581:24)
+[Worker] Job 8 failed: Content workflow failed: Step 'nexus' failed: Directive not found: 01_nexus_strategist.md
+[Worker] Processing job 8: Test Title
+[Worker] Starting content generation workflow...
+[Workflow:ContentSys-Engine] Starting execution with 5 steps
+[Workflow:ContentSys-Engine] Executing step: nexus
+[Nexus] Starting strategy for: Test Title
+[Workflow:ContentSys-Engine] Step nexus failed, retrying (1/2)...
+[Nexus] Starting strategy for: Test Title
+[Workflow:ContentSys-Engine] Step nexus failed after all retries
+[Worker] Job 8 failed: Error: Content workflow failed: Step 'nexus' failed: Directive not found: 01_nexus_strategist.md
+    at Worker.processFn (/app/dist/worker.js:97:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Worker.processJob (/app/node_modules/bullmq/dist/cjs/classes/worker.js:394:28)
+    at async Worker.retryIfFailed (/app/node_modules/bullmq/dist/cjs/classes/worker.js:581:24)
+[Worker] Job 8 failed: Content workflow failed: Step 'nexus' failed: Directive not found: 01_nexus_strategist.md
+[Worker] Processing job 8: Test Title
+[Worker] Starting content generation workflow...
+[Workflow:ContentSys-Engine] Starting execution with 5 steps
+[Workflow:ContentSys-Engine] Executing step: nexus
+[Nexus] Starting strategy for: Test Title
+[Workflow:ContentSys-Engine] Step nexus failed, retrying (1/2)...
+[Nexus] Starting strategy for: Test Title
+[Workflow:ContentSys-Engine] Step nexus failed after all retries
+[Worker] Job 8 failed: Error: Content workflow failed: Step 'nexus' failed: Directive not found: 01_nexus_strategist.md
+    at Worker.processFn (/app/dist/worker.js:97:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Worker.processJob (/app/node_modules/bullmq/dist/cjs/classes/worker.js:394:28)
+    at async Worker.retryIfFailed (/app/node_modules/bullmq/dist/cjs/classes/worker.js:581:24)
+[Worker] Job 8 failed: Content workflow failed: Step 'nexus' failed: Directive not found: 01_nexus_strategist.md
+{"level":"info","timestamp":"2025-12-17T09:11:43.197Z","message":"::1 - - [17/Dec/2025:09:11:43 +0000] \"GET / HTTP/1.1\" 200 478 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}
+{"level":"info","timestamp":"2025-12-17T09:11:43.358Z","message":"::1 - - [17/Dec/2025:09:11:43 +0000] \"GET /assets/index-BFJ7lIi9.css HTTP/1.1\" 200 17045 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}
+{"level":"info","timestamp":"2025-12-17T09:11:43.361Z","message":"::1 - - [17/Dec/2025:09:11:43 +0000] \"GET /assets/index-h9i-pq3U.js HTTP/1.1\" 200 297429 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}
+[Security] No CONTENTSYS_API_KEY set. Allowing request but this is insecure.
+{"level":"info","timestamp":"2025-12-17T09:11:43.858Z","message":"::1 - - [17/Dec/2025:09:11:43 +0000] \"GET /api/system/stats HTTP/1.1\" 200 358 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}
+{"level":"info","timestamp":"2025-12-17T09:11:44.068Z","message":"::1 - - [17/Dec/2025:09:11:44 +0000] \"GET /tenants HTTP/1.1\" 200 478 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}
+{"level":"info","timestamp":"2025-12-17T09:11:44.077Z","message":"::1 - - [17/Dec/2025:09:11:44 +0000] \"GET /assets/index-h9i-pq3U.js HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}
+{"level":"info","timestamp":"2025-12-17T09:11:44.077Z","message":"::1 - - [17/Dec/2025:09:11:44 +0000] \"GET /assets/index-BFJ7lIi9.css HTTP/1.1\" 304 - \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.7339.16 Safari/537.36\""}

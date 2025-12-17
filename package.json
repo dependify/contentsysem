@@ -4,7 +4,8 @@
   "description": "Multi-tenant AI content engine with agentic workflow",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:client && tsc",
+    "build:client": "cd client && npm run build",
     "start": "node dist/index.js",
     "dev": "ts-node --transpile-only src/index.ts",
     "worker": "ts-node --transpile-only src/worker.ts",
