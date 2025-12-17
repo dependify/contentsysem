@@ -1,9 +1,16 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { db } from './execution/db_client';
 import { scheduler } from './scheduler';
 import { contentQueue } from './worker';
 import * as dotenv from 'dotenv';
+import { logger } from './utils/logger';
+import { authenticate } from './middleware/auth';
+import { validate } from './middleware/validation';
+import { errorHandler } from './middleware/error_handler';
+import { z } from 'zod';
 
 dotenv.config();
 
@@ -11,8 +18,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(morgan('combined', {
+  stream: { write: (message) => logger.info(message.trim()) }
+}));
+
+// Apply authentication to API routes (excluding health)
+app.use('/api', authenticate);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -37,8 +51,28 @@ app.post('/api/init', async (req, res) => {
   }
 });
 
+// Validation Schemas
+const tenantSchema = z.object({
+  body: z.object({
+    business_name: z.string().min(1),
+    domain_url: z.string().url().optional(),
+    icp_profile: z.record(z.any()).optional(),
+    brand_voice: z.string().optional(),
+    wp_credentials: z.record(z.any()).optional(),
+    api_config: z.record(z.any()).optional(),
+  })
+});
+
+const contentSchema = z.object({
+  body: z.object({
+    tenant_id: z.number().int().positive(),
+    title: z.string().min(1),
+    scheduled_for: z.string().datetime().optional(),
+  })
+});
+
 // Tenant management endpoints
-app.post('/api/tenants', async (req, res) => {
+app.post('/api/tenants', validate(tenantSchema), async (req, res, next) => {
   try {
     const { 
       business_name, 
@@ -103,16 +137,9 @@ app.get('/api/tenants/:id', async (req, res) => {
 });
 
 // Content queue management
-app.post('/api/content/add', async (req, res) => {
+app.post('/api/content/add', validate(contentSchema), async (req, res, next) => {
   try {
     const { tenant_id, title, scheduled_for } = req.body;
-
-    if (!tenant_id || !title) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'tenant_id and title are required' 
-      });
-    }
 
     const queueId = await scheduler.addContent(
       tenant_id, 
@@ -256,13 +283,7 @@ app.get('/api/jobs/:job_id', async (req, res) => {
 });
 
 // Error handling middleware
-app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Unhandled error:', error);
-  res.status(500).json({ 
-    success: false, 
-    error: 'Internal server error' 
-  });
-});
+app.use(errorHandler);
 
 // Start server
 async function startServer() {
