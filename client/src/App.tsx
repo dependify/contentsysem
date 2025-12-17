@@ -1,6 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Activity, LogOut, Image } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, LogOut, Image } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
 import Content from './pages/Content';

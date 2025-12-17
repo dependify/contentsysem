@@ -1,13 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import api from '../lib/api';
-import { Plus, Globe, Settings, FileText, Calendar, Edit3 } from 'lucide-react';
+import { Plus, Globe, Settings } from 'lucide-react';
 import FileUpload from '../components/FileUpload';
 import AssetLibrary from './AssetLibrary';
 import Schedule from './Schedule';
 
 export default function Tenants() {
-  const [tenants, setTenants] = useState<any[]>([]);
   const [selectedTenant, setSelectedTenant] = useState<number | null>(null);
   const [view, setView] = useState<'create' | 'manage'>('create');
 
@@ -17,11 +16,6 @@ export default function Tenants() {
     brand_voice: 'Professional',
     auto_publish: true
   });
-
-  useEffect(() => {
-    // In a real app, fetch list of tenants
-    // For now we just show create form default
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

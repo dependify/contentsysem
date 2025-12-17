@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import api from '../lib/api';
-import { Plus, List } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export default function AssetLibrary({ tenantId }: { tenantId: number }) {
   const [titles, setTitles] = useState('');
