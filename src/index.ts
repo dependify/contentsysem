@@ -28,6 +28,18 @@ app.use(morgan('combined', {
 // Apply authentication to API routes (excluding health)
 app.use('/api', authenticate);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to ContentSys API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      docs: '/api'
+    }
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
