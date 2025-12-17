@@ -39,6 +39,12 @@ describe('API Professionalism & Security', () => {
       const res = await request(app).get('/health');
       expect(res.status).toBe(200);
     });
+
+    test('should return welcome message on root path', async () => {
+      const res = await request(app).get('/');
+      expect(res.status).toBe(200);
+      expect(res.body.message).toContain('Welcome to ContentSys');
+    });
   });
 
   describe('Validation Middleware', () => {
