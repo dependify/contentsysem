@@ -10,10 +10,29 @@ import { logger } from './utils/logger';
 import { authenticate } from './middleware/auth';
 import { validate } from './middleware/validation';
 import { errorHandler } from './middleware/error_handler';
+import authRoutes from './routes/authRoutes';
 import { z } from 'zod';
 import path from 'path';
+import multer from 'multer';
+import fs from 'fs';
 
 dotenv.config();
+
+// Ensure uploads directory exists
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname)
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,8 +47,14 @@ app.use(morgan('combined', {
   stream: { write: (message) => logger.info(message.trim()) }
 }));
 
-// Apply authentication to API routes (excluding health)
+// Public routes
+app.use('/api/auth', authRoutes);
+
+// Apply authentication to API routes (excluding health and auth)
 app.use('/api', authenticate);
+
+// Serve uploads
+app.use('/uploads', express.static('uploads'));
 
 // Serve static files from the React client
 const clientDistPath = path.join(__dirname, '../client/dist');
@@ -63,6 +88,63 @@ app.post('/api/init', async (req, res) => {
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
+  }
+});
+
+// Blog Post Management
+app.get('/api/posts/:id', async (req, res) => {
+  try {
+    const post = await db.queryOne(
+      'SELECT * FROM content_queue WHERE id = $1',
+      [req.params.id]
+    );
+    if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+    res.json({ success: true, post });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Error fetching post' });
+  }
+});
+
+app.put('/api/posts/:id', async (req, res) => {
+  try {
+    const { html_content, markdown_content } = req.body;
+    await db.query(
+      'UPDATE content_queue SET html_content = $1, markdown_content = $2 WHERE id = $3',
+      [html_content, markdown_content, req.params.id]
+    );
+    res.json({ success: true, message: 'Post updated' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Error updating post' });
+  }
+});
+
+// Image Asset Library
+app.get('/api/images', async (req, res) => {
+  try {
+    const images = await db.query(`
+      SELECT a.data, cq.title, cq.id as queue_id, a.created_at
+      FROM artifacts a
+      JOIN content_queue cq ON a.queue_id = cq.id
+      WHERE a.step_name = 'pixel'
+      ORDER BY a.created_at DESC
+    `);
+
+    // Parse JSON data to get simple list
+    const flatImages = images.map((row: any) => {
+      const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
+      return (data.image_data || []).map((img: any) => ({
+        url: img.url,
+        prompt: img.prompt, // Assuming we store prompt in image data, if not it's in Canvas artifact
+        post_title: row.title,
+        post_id: row.queue_id,
+        created_at: row.created_at
+      }));
+    }).flat();
+
+    res.json({ success: true, images: flatImages });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Error fetching images' });
   }
 });
 
@@ -148,6 +230,36 @@ app.get('/api/tenants/:id', async (req, res) => {
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
+  }
+});
+
+// Tenant file upload
+app.post('/api/tenants/:id/upload', upload.single('file'), async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    const field = req.body.field;
+    const file = req.file;
+
+    if (!file || !field) {
+      return res.status(400).json({ success: false, error: 'File and field required' });
+    }
+
+    const validFields = ['icp_profile', 'brand_voice', 'marketing_frameworks', 'lead_magnets'];
+    if (!validFields.includes(field)) {
+      return res.status(400).json({ success: false, error: 'Invalid field' });
+    }
+
+    // Update tenant record with file path
+    // For simplicity, we just store the path. In production, might parse text content.
+    await db.query(
+      `UPDATE tenants SET ${field} = $1 WHERE id = $2`,
+      [file.path, tenantId]
+    );
+
+    res.json({ success: true, message: 'File uploaded', path: file.path });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ success: false, error: 'Upload failed' });
   }
 });
 
