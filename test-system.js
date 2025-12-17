@@ -6,7 +6,7 @@
  */
 
 // Disable SSL certificate verification for self-signed certs
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const { Pool } = require('pg');
 const Redis = require('ioredis');
@@ -28,9 +28,21 @@ async function testDatabase() {
     return false;
   }
 
+  const sslMode = DATABASE_URL?.match(/sslmode=(\w+)/)?.[1];
+  let sslConfig = false;
+
+  if (sslMode === 'require' || sslMode === 'no-verify') {
+    sslConfig = { rejectUnauthorized: false };
+  } else if (sslMode === 'disable') {
+    sslConfig = false;
+  } else if (sslMode === 'prefer' || !sslMode) {
+     // Default behavior if not specified or prefer
+     sslConfig = { rejectUnauthorized: false };
+  }
+
   const pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: sslConfig
   });
 
   try {
@@ -69,7 +81,20 @@ async function testRedis() {
   }
 
   try {
-    const redis = new Redis(REDIS_URL);
+    let redisConfig = REDIS_URL;
+
+    // Handle Redis SSL for self-signed certs
+    if (REDIS_URL && REDIS_URL.startsWith('rediss://')) {
+      redisConfig = {
+        url: REDIS_URL, // ioredis doesn't accept url string in object directly like this usually, let's parse or use constructor options
+        tls: { rejectUnauthorized: false }
+      };
+      // actually ioredis constructor takes URL string as first arg and options as second
+    }
+
+    const redis = REDIS_URL.startsWith('rediss://')
+      ? new Redis(REDIS_URL, { tls: { rejectUnauthorized: false } })
+      : new Redis(REDIS_URL);
     
     await redis.ping();
     console.log('✅ Redis connected!');
