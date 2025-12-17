@@ -79,6 +79,7 @@ class DatabaseClient {
         wp_credentials TEXT,
         api_config TEXT,
         scheduling_prefs TEXT, -- CRON strings or JSON config
+        auto_publish BOOLEAN DEFAULT TRUE,
 
         created_at TIMESTAMP DEFAULT NOW()
       );

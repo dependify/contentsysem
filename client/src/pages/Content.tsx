@@ -2,12 +2,14 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { format } from 'date-fns';
-import { Plus, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Plus, RefreshCw, CheckCircle, XCircle, Clock, Edit2, Send, AlertCircle } from 'lucide-react';
+import PostEditor from './PostEditor';
 
 export default function Content() {
   const [queue, setQueue] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [tenantId] = useState('1'); // Default to 1 for demo
+  const [editingPost, setEditingPost] = useState<number | null>(null);
 
   const fetchQueue = () => {
     api.get(`/queue/status/${tenantId}`)
@@ -37,8 +39,25 @@ export default function Content() {
     }
   };
 
+  const handlePublish = async (id: number) => {
+    if (!confirm('Approve and publish to WordPress?')) return;
+    try {
+      await api.post(`/posts/${id}/publish`);
+      fetchQueue();
+    } catch (err) {
+      alert('Publish failed');
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {editingPost && (
+        <PostEditor
+          postId={editingPost}
+          onClose={() => setEditingPost(null)}
+          onSave={() => { setEditingPost(null); fetchQueue(); }}
+        />
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold">Content Assembly Line</h2>
@@ -91,14 +110,16 @@ export default function Content() {
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium
                     ${item.status === 'complete' ? 'bg-green-900 text-green-200' :
                       item.status === 'failed' ? 'bg-red-900 text-red-200' :
+                      item.status === 'review_pending' ? 'bg-yellow-900 text-yellow-200' :
                       item.status === 'processing' ? 'bg-blue-900 text-blue-200' : 'bg-gray-700 text-gray-200'
                     }`}
                   >
                     {item.status === 'complete' && <CheckCircle size={12} />}
                     {item.status === 'failed' && <XCircle size={12} />}
+                    {item.status === 'review_pending' && <AlertCircle size={12} />}
                     {item.status === 'pending' && <Clock size={12} />}
                     {item.status === 'processing' && <RefreshCw size={12} className="animate-spin" />}
-                    {item.status.toUpperCase()}
+                    {item.status.toUpperCase().replace('_', ' ')}
                   </span>
                 </td>
                 <td className="px-6 py-4 font-medium">{item.title}</td>
@@ -114,7 +135,27 @@ export default function Content() {
                 <td className="px-6 py-4 text-sm text-gray-400">
                   {format(new Date(item.scheduled_for), 'MMM d, h:mm a')}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 flex items-center gap-3">
+                  {(item.status === 'review_pending' || item.status === 'complete' || item.status === 'draft_ready') && (
+                    <button
+                      onClick={() => setEditingPost(item.id)}
+                      className="text-gray-400 hover:text-white"
+                      title="Edit Content"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                  )}
+
+                  {item.status === 'review_pending' && (
+                    <button
+                      onClick={() => handlePublish(item.id)}
+                      className="text-green-400 hover:text-green-300"
+                      title="Approve & Publish"
+                    >
+                      <Send size={18} />
+                    </button>
+                  )}
+
                   {item.published_url && (
                     <a
                       href={item.published_url}

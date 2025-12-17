@@ -118,6 +118,52 @@ app.put('/api/posts/:id', async (req, res) => {
   }
 });
 
+// Publish Post (Manual Trigger)
+app.post('/api/posts/:id/publish', async (req, res) => {
+  try {
+    const queueId = req.params.id;
+    const post = await db.queryOne('SELECT * FROM content_queue WHERE id = $1', [queueId]);
+
+    if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+
+    const tenant = await db.queryOne('SELECT wp_credentials FROM tenants WHERE id = $1', [post.tenant_id]);
+
+    if (!tenant || !tenant.wp_credentials) {
+      return res.status(400).json({ success: false, error: 'No WordPress credentials configured' });
+    }
+
+    // Trigger deployment logic directly (simplified reuse of Deployer logic would be better, but for now we simulate)
+    // In a real app, we'd call the deployer function here.
+    // Importing the function from execution/wp_deployer.ts
+    const { deployArticle } = require('./execution/wp_deployer');
+
+    const articleData = {
+      title: post.title,
+      content: post.html_content || post.markdown_content || '',
+      images: [], // Images should be attached but for simple publish we skip complex re-gathering
+      categories: ['Blog'],
+      tags: []
+    };
+
+    const wpCredentials = JSON.parse(tenant.wp_credentials);
+    const result = await deployArticle(wpCredentials, articleData);
+
+    if (result.success) {
+      await db.query(
+        'UPDATE content_queue SET status = $1, published_url = $2 WHERE id = $3',
+        ['complete', result.postUrl, queueId]
+      );
+      res.json({ success: true, url: result.postUrl });
+    } else {
+      throw new Error(result.error);
+    }
+
+  } catch (err) {
+    console.error('Publish error:', err);
+    res.status(500).json({ success: false, error: 'Publish failed' });
+  }
+});
+
 // Image Asset Library
 app.get('/api/images', async (req, res) => {
   try {

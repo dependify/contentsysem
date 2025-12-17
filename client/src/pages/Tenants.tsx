@@ -14,7 +14,8 @@ export default function Tenants() {
   const [formData, setFormData] = useState({
     business_name: '',
     domain_url: '',
-    brand_voice: 'Professional'
+    brand_voice: 'Professional',
+    auto_publish: true
   });
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function Tenants() {
       alert('Tenant created!');
       setSelectedTenant(res.data.tenant_id);
       setView('manage');
-      setFormData({ business_name: '', domain_url: '', brand_voice: 'Professional' });
+      setFormData({ business_name: '', domain_url: '', brand_voice: 'Professional', auto_publish: true });
     } catch (err) {
       alert('Failed to create tenant');
       console.error(err);
@@ -102,6 +103,19 @@ export default function Tenants() {
                 onChange={e => setFormData({...formData, brand_voice: e.target.value})}
                 placeholder="e.g. Professional, Witty, Empathetic..."
               />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="auto_publish"
+                className="w-4 h-4 rounded bg-gray-900 border-gray-700 text-indigo-600 focus:ring-indigo-500"
+                checked={formData.auto_publish}
+                onChange={e => setFormData({...formData, auto_publish: e.target.checked})}
+              />
+              <label htmlFor="auto_publish" className="text-sm font-medium text-gray-400 select-none">
+                Auto-publish to WordPress (Skip manual review)
+              </label>
             </div>
 
             <button

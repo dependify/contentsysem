@@ -371,11 +371,31 @@ multimediaWorkflow.step('deployer', {
         [10, queueId]
       );
 
-      // Get tenant WordPress credentials
+      // Get tenant configuration
       const tenant = await db.queryOne(
-        'SELECT wp_credentials, business_name FROM tenants WHERE id = $1',
+        'SELECT wp_credentials, business_name, auto_publish FROM tenants WHERE id = $1',
         [tenantId]
       );
+
+      // Check for Manual Approval Mode
+      if (tenant && tenant.auto_publish === false) {
+        console.log('[Deployer] Auto-publish disabled. Pausing for manual review.');
+
+        await db.query(
+          'UPDATE content_queue SET status = $1, current_step = $2 WHERE id = $3',
+          ['review_pending', 10, queueId]
+        );
+
+        return {
+          success: true,
+          data: {
+            deployed: false,
+            reason: 'Manual approval required',
+            status: 'review_pending'
+          },
+          duration: Date.now() - startTime
+        };
+      }
 
       if (!tenant || !tenant.wp_credentials) {
         console.warn('[Deployer] No WordPress credentials found, skipping deployment');
