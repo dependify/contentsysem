@@ -120,10 +120,74 @@ class DatabaseClient {
         created_at TIMESTAMP DEFAULT NOW()
       );
 
+      -- Image Assets (Generated Images)
+      CREATE TABLE IF NOT EXISTS image_assets (
+        id SERIAL PRIMARY KEY,
+        tenant_id INT REFERENCES tenants(id),
+        queue_id INT REFERENCES content_queue(id),
+        filename VARCHAR(255) NOT NULL,
+        file_path VARCHAR(500) NOT NULL,
+        prompt_used TEXT,
+        image_type VARCHAR(50) DEFAULT 'blog_image',
+        width INT,
+        height INT,
+        file_size INT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Blog Post Titles (Asset Library)
+      CREATE TABLE IF NOT EXISTS blog_titles (
+        id SERIAL PRIMARY KEY,
+        tenant_id INT REFERENCES tenants(id),
+        title VARCHAR(500) NOT NULL,
+        status VARCHAR(50) DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'failed'
+        priority INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Content Schedules (Calendar Management)
+      CREATE TABLE IF NOT EXISTS content_schedules (
+        id SERIAL PRIMARY KEY,
+        tenant_id INT REFERENCES tenants(id),
+        title VARCHAR(500) NOT NULL,
+        scheduled_date DATE NOT NULL,
+        scheduled_time TIME DEFAULT '09:00:00',
+        status VARCHAR(50) DEFAULT 'scheduled', -- 'scheduled', 'published', 'cancelled'
+        auto_publish BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- System Settings (Admin God Mode)
+      CREATE TABLE IF NOT EXISTS system_settings (
+        id SERIAL PRIMARY KEY,
+        setting_key VARCHAR(100) UNIQUE NOT NULL,
+        setting_value TEXT,
+        setting_type VARCHAR(50) DEFAULT 'string', -- 'string', 'json', 'boolean', 'number'
+        description TEXT,
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Global Prompt Templates (Admin Management)
+      CREATE TABLE IF NOT EXISTS prompt_templates (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL, -- 'strategy', 'research', 'writing', etc.
+        template_content TEXT NOT NULL,
+        variables JSONB, -- Available variables for the template
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+
       -- Indexes for performance
       CREATE INDEX IF NOT EXISTS idx_content_queue_status ON content_queue(status);
       CREATE INDEX IF NOT EXISTS idx_content_queue_scheduled ON content_queue(scheduled_for);
       CREATE INDEX IF NOT EXISTS idx_artifacts_queue_step ON artifacts(queue_id, step_name);
+      CREATE INDEX IF NOT EXISTS idx_image_assets_tenant ON image_assets(tenant_id);
+      CREATE INDEX IF NOT EXISTS idx_blog_titles_tenant ON blog_titles(tenant_id);
+      CREATE INDEX IF NOT EXISTS idx_content_schedules_tenant_date ON content_schedules(tenant_id, scheduled_date);
     `;
 
     await this.query(schema);

@@ -1,10 +1,12 @@
 
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Activity, LogOut, Image } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, LogOut, Image, Terminal, GitBranch } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
 import Content from './pages/Content';
 import ImageLibrary from './pages/ImageLibrary';
+import Prompts from './pages/Prompts';
+import Workflows from './pages/Workflows';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { clsx } from 'clsx';
@@ -53,6 +55,8 @@ function Layout() {
               </div>
               <NavItem to="/" icon={LayoutDashboard}>System Status</NavItem>
               <NavItem to="/tenants" icon={Users}>Tenant Management</NavItem>
+              <NavItem to="/prompts" icon={Terminal}>Prompts</NavItem>
+              <NavItem to="/workflows" icon={GitBranch}>Workflows</NavItem>
             </>
           )}
           
@@ -84,6 +88,8 @@ function Layout() {
             <Route path="/tenants" element={<Tenants />} />
             <Route path="/content" element={<Content />} />
             <Route path="/images" element={<ImageLibrary />} />
+            <Route path="/prompts" element={<Prompts />} />
+            <Route path="/workflows" element={<Workflows />} />
           </Routes>
         </main>
       </div>

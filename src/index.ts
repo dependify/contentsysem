@@ -11,6 +11,7 @@ import { authenticate } from './middleware/auth';
 import { validate } from './middleware/validation';
 import { errorHandler } from './middleware/error_handler';
 import authRoutes from './routes/authRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { z } from 'zod';
 import path from 'path';
 import multer from 'multer';
@@ -52,6 +53,9 @@ app.use('/api/auth', authRoutes);
 
 // Apply authentication to API routes (excluding health and auth)
 app.use('/api', authenticate);
+
+// Admin Routes
+app.use('/api/admin', adminRoutes);
 
 // Serve uploads
 app.use('/uploads', express.static('uploads'));
@@ -167,13 +171,23 @@ app.post('/api/posts/:id/publish', async (req, res) => {
 // Image Asset Library
 app.get('/api/images', async (req, res) => {
   try {
-    const images = await db.query(`
+    const tenantId = req.query.tenant_id;
+    let query = `
       SELECT a.data, cq.title, cq.id as queue_id, a.created_at
       FROM artifacts a
       JOIN content_queue cq ON a.queue_id = cq.id
       WHERE a.step_name = 'pixel'
-      ORDER BY a.created_at DESC
-    `);
+    `;
+    const params = [];
+    
+    if (tenantId) {
+      query += ` AND cq.tenant_id = $1`;
+      params.push(tenantId);
+    }
+    
+    query += ` ORDER BY a.created_at DESC`;
+
+    const images = await db.query(query, params);
     
     // Parse JSON data to get simple list
     const flatImages = images.map((row: any) => {
@@ -203,6 +217,7 @@ const tenantSchema = z.object({
     brand_voice: z.string().optional(),
     wp_credentials: z.record(z.any()).optional(),
     api_config: z.record(z.any()).optional(),
+    auto_publish: z.boolean().optional(),
   })
 });
 
@@ -223,12 +238,13 @@ app.post('/api/tenants', validate(tenantSchema), async (req, res, next) => {
       icp_profile, 
       brand_voice, 
       wp_credentials, 
-      api_config 
+      api_config,
+      auto_publish
     } = req.body;
 
     const result = await db.query(`
-      INSERT INTO tenants (business_name, domain_url, icp_profile, brand_voice, wp_credentials, api_config)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO tenants (business_name, domain_url, icp_profile, brand_voice, wp_credentials, api_config, auto_publish)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id
     `, [
       business_name,
@@ -236,7 +252,8 @@ app.post('/api/tenants', validate(tenantSchema), async (req, res, next) => {
       JSON.stringify(icp_profile),
       brand_voice,
       JSON.stringify(wp_credentials),
-      JSON.stringify(api_config)
+      JSON.stringify(api_config),
+      auto_publish ?? true
     ]);
 
     res.json({ 
