@@ -12,14 +12,39 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // Redis connection configuration
-const redisConfig = {
-  connection: {
-    host: '20.14.88.69',
-    port: 6379,
-    password: 'VyJ3asGrXipJka4aKcvk1vsYKZ8JJTrDEaXerj9BTbr7P7PL9AYZPKtYCNtxcId2',
-    tls: {}
+const redisUrl = process.env.REDIS_URL;
+let redisConfig;
+
+if (redisUrl) {
+  // If REDIS_URL is provided (e.g. from Heroku/Railway/Render), parse it
+  // This handles the format rediss://:password@host:port
+  try {
+    const url = new URL(redisUrl);
+    redisConfig = {
+      connection: {
+        host: url.hostname,
+        port: parseInt(url.port || '6379'),
+        password: url.password,
+        username: url.username,
+        tls: url.protocol === 'rediss:' ? { rejectUnauthorized: false } : undefined
+      }
+    };
+  } catch (e) {
+    console.error('Invalid REDIS_URL, falling back to individual env vars');
   }
-};
+}
+
+if (!redisConfig) {
+  // Fallback to individual variables
+  redisConfig = {
+    connection: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      tls: process.env.REDIS_TLS === 'true' ? { rejectUnauthorized: false } : undefined
+    }
+  };
+}
 
 // Create the content generation queue
 export const contentQueue = new Queue('ContentSysQueue', redisConfig);
