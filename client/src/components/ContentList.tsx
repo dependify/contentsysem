@@ -9,6 +9,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
   const [queue, setQueue] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [editingPost, setEditingPost] = useState<number | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const fetchQueue = () => {
     api.get(`/queue/status/${tenantId}`)
@@ -25,6 +26,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return;
+    setAdding(true);
     try {
       await api.post('/content/add', { 
         tenant_id: tenantId, 
@@ -35,6 +37,8 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
     } catch (err) {
       console.error(err);
       alert('Failed to add content');
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -63,6 +67,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
         <form onSubmit={handleAdd} className="flex gap-4">
           <input
             type="text"
+            aria-label="Blog post title"
             placeholder="Enter blog title to generate..."
             className="flex-1 bg-gray-900 border border-gray-700 rounded p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
             value={title}
@@ -70,10 +75,11 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
           />
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded font-medium flex items-center gap-2"
+            disabled={adding}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus size={20} />
-            Queue Content
+            {adding ? <RefreshCw size={20} className="animate-spin" /> : <Plus size={20} />}
+            {adding ? 'Queueing...' : 'Queue Content'}
           </button>
         </form>
       </div>
@@ -128,6 +134,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
                       onClick={() => setEditingPost(item.id)}
                       className="text-gray-400 hover:text-white"
                       title="Edit Content"
+                      aria-label="Edit Content"
                     >
                       <Edit2 size={18} />
                     </button>
@@ -138,6 +145,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
                       onClick={() => handlePublish(item.id)}
                       className="text-green-400 hover:text-green-300"
                       title="Approve & Publish"
+                      aria-label="Approve and Publish"
                     >
                       <Send size={18} />
                     </button>

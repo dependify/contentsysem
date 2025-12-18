@@ -29,6 +29,7 @@ export default function ImageGallery({ tenantId }: { tenantId: number }) {
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-2 bg-white text-black rounded-full hover:bg-gray-200"
+                  aria-label="View original image"
                 >
                   <ExternalLink size={20} />
                 </a>

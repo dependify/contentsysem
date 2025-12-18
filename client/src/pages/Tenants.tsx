@@ -134,6 +134,7 @@ export default function Tenants() {
             <div className="flex gap-2 justify-center">
               <input 
                 type="number" 
+                aria-label="Tenant ID"
                 placeholder="Tenant ID (e.g. 1)" 
                 className="bg-gray-900 border border-gray-700 rounded p-2 w-32 text-center"
                 onChange={(e) => {

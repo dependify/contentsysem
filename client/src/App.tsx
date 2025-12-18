@@ -73,7 +73,7 @@ function Layout() {
               <div className="w-2 h-2 rounded-full bg-green-400"></div>
               <span className="truncate w-24">{user.email}</span>
             </div>
-            <button onClick={logout} className="text-gray-500 hover:text-white">
+            <button onClick={logout} className="text-gray-500 hover:text-white" aria-label="Logout">
               <LogOut size={16} />
             </button>
           </div>
