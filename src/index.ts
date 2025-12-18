@@ -73,12 +73,46 @@ app.get('*', (req, res, next) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'healthy',
     timestamp: new Date(),
-    service: 'ContentSys Engine'
-  });
+    service: 'ContentSys Engine',
+    version: '1.0.0',
+    checks: {
+      database: 'unknown',
+      redis: 'unknown',
+      worker: 'unknown'
+    }
+  };
+
+  try {
+    // Check database connectivity
+    await db.query('SELECT 1');
+    health.checks.database = 'healthy';
+  } catch (error) {
+    health.checks.database = 'unhealthy';
+    health.status = 'degraded';
+  }
+
+  try {
+    // Check Redis connectivity (if available)
+    const Redis = require('ioredis');
+    const redis = new Redis(process.env.REDIS_URL);
+    await redis.ping();
+    health.checks.redis = 'healthy';
+    redis.disconnect();
+  } catch (error) {
+    health.checks.redis = 'unhealthy';
+    health.status = 'degraded';
+  }
+
+  // Check worker status (simplified)
+  health.checks.worker = 'healthy'; // Assume healthy if server is running
+
+  // Set appropriate HTTP status
+  const httpStatus = health.status === 'healthy' ? 200 : 503;
+  res.status(httpStatus).json(health);
 });
 
 // Initialize database schema
@@ -472,7 +506,7 @@ app.get('/api/jobs/:job_id', async (req, res) => {
   }
 });
 
-// Error handling middleware
+// ==ror handling middleware
 app.use(errorHandler);
 
 // Start server

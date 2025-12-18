@@ -175,3 +175,58 @@ curl -X POST http://localhost:3000/api/jobs/trigger \
 ## License
 
 MIT License - see LICENSE file for details.
+
+## Deployment
+
+### Coolify Deployment
+
+ContentSys is ready for deployment on Coolify with pre-configured Docker setup.
+
+**Quick Deploy:**
+1. Push code to your Git repository
+2. Create new application in Coolify
+3. Connect your repository
+4. Set environment variables (see `.env.production`)
+5. Deploy!
+
+**Files included for deployment:**
+- `Dockerfile` - Multi-stage Docker build
+- `docker-compose.yml` - Local Docker development
+- `coolify.json` - Coolify configuration
+- `DEPLOYMENT.md` - Detailed deployment guide
+
+**Test deployment readiness:**
+```bash
+# Windows
+deploy.bat
+
+# Linux/Mac
+./deploy.sh
+```
+
+### Environment Variables
+
+Required for production deployment:
+
+```env
+DATABASE_URL=postgres://user:pass@host:5432/contentsys
+REDIS_URL=redis://host:6379/0
+MINIMAX_API_KEY=your_key
+OPENAI_API_KEY=your_key
+TAVILY_API_KEY=your_key
+FIRECRAWL_API_KEY=your_key
+EXA_API_KEY=your_key
+RUNWARE_API_KEY=your_key
+JWT_SECRET=32_char_minimum_secret
+SESSION_SECRET=32_char_minimum_secret
+```
+
+See `DEPLOYMENT.md` for complete deployment instructions.
+
+## Production Features
+
+- **Health Checks**: `/health` endpoint with database/Redis status
+- **Docker Support**: Multi-stage builds for optimal image size
+- **Security**: JWT authentication, input validation, rate limiting
+- **Monitoring**: Comprehensive logging and error tracking
+- **Scalability**: Horizontal scaling support with load balancing

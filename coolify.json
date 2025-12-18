@@ -1,0 +1,42 @@
+{
+  "name": "ContentSys",
+  "description": "Multi-tenant AI content engine with agentic workflow",
+  "type": "application",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "ports": [
+    {
+      "internal": 3000,
+      "external": 80,
+      "protocol": "http"
+    }
+  ],
+  "environment": [
+    {
+      "name": "NODE_ENV",
+      "value": "production"
+    },
+    {
+      "name": "PORT",
+      "value": "3000"
+    }
+  ],
+  "volumes": [
+    {
+      "name": "uploads",
+      "path": "/app/uploads"
+    }
+  ],
+  "healthcheck": {
+    "path": "/health",
+    "interval": 30,
+    "timeout": 10,
+    "retries": 3
+  },
+  "resources": {
+    "memory": "512Mi",
+    "cpu": "500m"
+  }
+}
