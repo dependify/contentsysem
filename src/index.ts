@@ -12,6 +12,16 @@ import { validate } from './middleware/validation';
 import { errorHandler } from './middleware/error_handler';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
+import tenantRoutes from './routes/tenantRoutes';
+import contentRoutes from './routes/contentRoutes';
+import calendarRoutes from './routes/calendarRoutes';
+import postRoutes from './routes/postRoutes';
+import imageRoutes from './routes/imageRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
+import userRoutes from './routes/userRoutes';
+import settingsRoutes from './routes/settingsRoutes';
+import exportRoutes from './routes/exportRoutes';
+import docsRoutes from './routes/docs';
 import { z } from 'zod';
 import path from 'path';
 import multer from 'multer';
@@ -56,6 +66,20 @@ app.use('/api', authenticate);
 
 // Admin Routes
 app.use('/api/admin', adminRoutes);
+
+// New Feature Routes
+app.use('/api/tenants', tenantRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/images', imageRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/export', exportRoutes);
+
+// Documentation
+app.use('/api-docs', docsRoutes);
 
 // Serve uploads
 app.use('/uploads', express.static('uploads'));
@@ -122,9 +146,9 @@ app.post('/api/init', async (req, res) => {
     res.json({ success: true, message: 'Database schema initialized' });
   } catch (error) {
     console.error('Schema initialization error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -161,11 +185,11 @@ app.post('/api/posts/:id/publish', async (req, res) => {
   try {
     const queueId = req.params.id;
     const post = await db.queryOne('SELECT * FROM content_queue WHERE id = $1', [queueId]);
-    
+
     if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
 
     const tenant = await db.queryOne('SELECT wp_credentials FROM tenants WHERE id = $1', [post.tenant_id]);
-    
+
     if (!tenant || !tenant.wp_credentials) {
       return res.status(400).json({ success: false, error: 'No WordPress credentials configured' });
     }
@@ -174,7 +198,7 @@ app.post('/api/posts/:id/publish', async (req, res) => {
     // In a real app, we'd call the deployer function here.
     // Importing the function from execution/wp_deployer.ts
     const { deployArticle } = require('./execution/wp_deployer');
-    
+
     const articleData = {
       title: post.title,
       content: post.html_content || post.markdown_content || '',
@@ -213,16 +237,16 @@ app.get('/api/images', async (req, res) => {
       WHERE a.step_name = 'pixel'
     `;
     const params = [];
-    
+
     if (tenantId) {
       query += ` AND cq.tenant_id = $1`;
       params.push(tenantId);
     }
-    
+
     query += ` ORDER BY a.created_at DESC`;
 
     const images = await db.query(query, params);
-    
+
     // Parse JSON data to get simple list
     const flatImages = images.map((row: any) => {
       const data = typeof row.data === 'string' ? JSON.parse(row.data) : row.data;
@@ -266,12 +290,12 @@ const contentSchema = z.object({
 // Tenant management endpoints
 app.post('/api/tenants', validate(tenantSchema), async (req, res, next) => {
   try {
-    const { 
-      business_name, 
-      domain_url, 
-      icp_profile, 
-      brand_voice, 
-      wp_credentials, 
+    const {
+      business_name,
+      domain_url,
+      icp_profile,
+      brand_voice,
+      wp_credentials,
       api_config,
       auto_publish
     } = req.body;
@@ -290,16 +314,16 @@ app.post('/api/tenants', validate(tenantSchema), async (req, res, next) => {
       auto_publish ?? true
     ]);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       tenant_id: result[0].id,
       message: 'Tenant created successfully'
     });
   } catch (error) {
     console.error('Tenant creation error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -323,9 +347,9 @@ app.get('/api/tenants/:id', async (req, res) => {
     res.json({ success: true, tenant });
   } catch (error) {
     console.error('Tenant fetch error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -366,21 +390,21 @@ app.post('/api/content/add', validate(contentSchema), async (req, res, next) => 
     const { tenant_id, title, scheduled_for } = req.body;
 
     const queueId = await scheduler.addContent(
-      tenant_id, 
-      title, 
+      tenant_id,
+      title,
       scheduled_for ? new Date(scheduled_for) : undefined
     );
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       queue_id: queueId,
       message: 'Content added to queue'
     });
   } catch (error) {
     console.error('Content add error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -390,24 +414,24 @@ app.post('/api/content/bulk-add', async (req, res) => {
     const { tenant_id, titles, interval_hours = 24 } = req.body;
 
     if (!tenant_id || !titles || !Array.isArray(titles)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'tenant_id and titles array are required' 
+      return res.status(400).json({
+        success: false,
+        error: 'tenant_id and titles array are required'
       });
     }
 
     const queueIds = await scheduler.bulkAddContent(tenant_id, titles, interval_hours);
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       queue_ids: queueIds,
       message: `${titles.length} items added to queue`
     });
   } catch (error) {
     console.error('Bulk add error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -419,9 +443,9 @@ app.get('/api/queue/status/:tenant_id', async (req, res) => {
     res.json({ success: true, queue_status: status });
   } catch (error) {
     console.error('Queue status error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -432,9 +456,9 @@ app.get('/api/system/stats', async (req, res) => {
     res.json({ success: true, stats });
   } catch (error) {
     console.error('System stats error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -445,9 +469,9 @@ app.post('/api/jobs/trigger', async (req, res) => {
     const { tenant_id, title } = req.body;
 
     if (!tenant_id || !title) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'tenant_id and title are required' 
+      return res.status(400).json({
+        success: false,
+        error: 'tenant_id and title are required'
       });
     }
 
@@ -461,17 +485,17 @@ app.post('/api/jobs/trigger', async (req, res) => {
       queueId: queueId
     });
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       job_id: job.id,
       queue_id: queueId,
       message: 'Job triggered manually'
     });
   } catch (error) {
     console.error('Manual trigger error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -480,13 +504,13 @@ app.post('/api/jobs/trigger', async (req, res) => {
 app.get('/api/jobs/:job_id', async (req, res) => {
   try {
     const job = await contentQueue.getJob(req.params.job_id);
-    
+
     if (!job) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       job: {
         id: job.id,
         data: job.data,
@@ -499,9 +523,9 @@ app.get('/api/jobs/:job_id', async (req, res) => {
     });
   } catch (error) {
     console.error('Job details error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

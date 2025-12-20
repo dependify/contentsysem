@@ -9,17 +9,17 @@ class DatabaseClient {
 
   constructor() {
     const connectionString = process.env.DATABASE_URL;
-    
+
     // Parse SSL mode from connection string
     const sslMode = connectionString?.match(/sslmode=(\w+)/)?.[1];
     let sslConfig: any = false;
-    
+
     if (sslMode === 'require') {
       sslConfig = { rejectUnauthorized: false };
     } else if (sslMode === 'disable') {
       sslConfig = false;
     }
-    
+
     this.pool = new Pool({
       connectionString: connectionString,
       ssl: sslConfig,
@@ -181,6 +181,103 @@ class DatabaseClient {
         updated_at TIMESTAMP DEFAULT NOW()
       );
 
+      -- Content Versions (Version History)
+      CREATE TABLE IF NOT EXISTS content_versions (
+        id SERIAL PRIMARY KEY,
+        queue_id INT REFERENCES content_queue(id) ON DELETE CASCADE,
+        version_number INT NOT NULL,
+        html_content TEXT,
+        markdown_content TEXT,
+        change_summary VARCHAR(500),
+        created_by INT REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Token Usage Tracking
+      CREATE TABLE IF NOT EXISTS token_usage (
+        id SERIAL PRIMARY KEY,
+        tenant_id INT REFERENCES tenants(id),
+        queue_id INT REFERENCES content_queue(id),
+        agent_name VARCHAR(50),
+        input_tokens INT DEFAULT 0,
+        output_tokens INT DEFAULT 0,
+        model VARCHAR(100),
+        cost_usd DECIMAL(10, 6),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Audit Logs
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id),
+        action VARCHAR(100) NOT NULL,
+        resource_type VARCHAR(50),
+        resource_id INT,
+        details JSONB,
+        ip_address VARCHAR(45),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- API Keys
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id SERIAL PRIMARY KEY,
+        tenant_id INT REFERENCES tenants(id),
+        key_name VARCHAR(100),
+        key_hash VARCHAR(255) NOT NULL,
+        key_prefix VARCHAR(10) NOT NULL,
+        permissions JSONB,
+        expires_at TIMESTAMP,
+        last_used_at TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Webhooks
+      CREATE TABLE IF NOT EXISTS webhooks (
+        id SERIAL PRIMARY KEY,
+        tenant_id INT REFERENCES tenants(id),
+        url VARCHAR(500) NOT NULL,
+        events JSONB NOT NULL,
+        secret VARCHAR(255),
+        is_active BOOLEAN DEFAULT TRUE,
+        failure_count INT DEFAULT 0,
+        last_triggered_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Email Logs
+      CREATE TABLE IF NOT EXISTS email_logs (
+        id SERIAL PRIMARY KEY,
+        recipient VARCHAR(255) NOT NULL,
+        type VARCHAR(100) NOT NULL,
+        success BOOLEAN NOT NULL,
+        error TEXT,
+        sent_at TIMESTAMP DEFAULT NOW()
+      );
+
+      -- Image Tags
+      CREATE TABLE IF NOT EXISTS image_tags (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) UNIQUE NOT NULL,
+        tenant_id INT REFERENCES tenants(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS image_asset_tags (
+        image_id INT REFERENCES image_assets(id) ON DELETE CASCADE,
+        tag_id INT REFERENCES image_tags(id) ON DELETE CASCADE,
+        PRIMARY KEY (image_id, tag_id)
+      );
+
+      -- Add archived column to tenants (safe to run multiple times)
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                       WHERE table_name='tenants' AND column_name='archived') THEN
+          ALTER TABLE tenants ADD COLUMN archived BOOLEAN DEFAULT FALSE;
+        END IF;
+      END $$;
+
       -- Indexes for performance
       CREATE INDEX IF NOT EXISTS idx_content_queue_status ON content_queue(status);
       CREATE INDEX IF NOT EXISTS idx_content_queue_scheduled ON content_queue(scheduled_for);
@@ -188,6 +285,12 @@ class DatabaseClient {
       CREATE INDEX IF NOT EXISTS idx_image_assets_tenant ON image_assets(tenant_id);
       CREATE INDEX IF NOT EXISTS idx_blog_titles_tenant ON blog_titles(tenant_id);
       CREATE INDEX IF NOT EXISTS idx_content_schedules_tenant_date ON content_schedules(tenant_id, scheduled_date);
+      CREATE INDEX IF NOT EXISTS idx_content_versions_queue ON content_versions(queue_id);
+      CREATE INDEX IF NOT EXISTS idx_token_usage_tenant ON token_usage(tenant_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
+      CREATE INDEX IF NOT EXISTS idx_api_keys_tenant ON api_keys(tenant_id);
+      CREATE INDEX IF NOT EXISTS idx_webhooks_tenant ON webhooks(tenant_id);
     `;
 
     await this.query(schema);

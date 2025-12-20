@@ -7,6 +7,7 @@ import { Worker, Queue } from 'bullmq';
 import { contentWorkflow } from './workflows/content_engine';
 import { multimediaWorkflow } from './workflows/multimedia_workflow';
 import { db } from './execution/db_client';
+import EmailService from './services/emailService';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -48,6 +49,10 @@ if (!redisConfig) {
 
 // Create the content generation queue
 export const contentQueue = new Queue('ContentSysQueue', redisConfig);
+
+// Initialize services
+// @ts-ignore - db matches Pool interface closely enough for transporter or we need to cast
+const emailService = new EmailService(db as any);
 
 // Main content generation worker
 const contentWorker = new Worker('ContentSysQueue', async (job) => {
@@ -91,9 +96,24 @@ const contentWorker = new Worker('ContentSysQueue', async (job) => {
 
     // Final success update
     await db.query(
-      "UPDATE content_queue SET status='complete', published_url=$1 WHERE id=$2",
+        "UPDATE content_queue SET status='complete', published_url=$1 WHERE id=$2",
       [multimediaResult.data.deployer.postUrl, queueId]
     );
+
+    // Get user id for notification
+    const content = await db.queryOne('SELECT * FROM content_queue WHERE id = $1', [queueId]);
+    const tenant = await db.queryOne('SELECT * FROM tenants WHERE id = $1', [tenantId]);
+    
+    // Notify user
+    // We need a way to get the user ID. For now, we assume the content item or logs might have it,
+    // or we fetch the first admin/user for this tenant.
+    const user = await db.queryOne('SELECT id FROM users WHERE tenant_id = $1 OR role = \'admin\' LIMIT 1', [tenantId]);
+    if (user) {
+      await emailService.notifyContentReady(user.id, {
+        ...content,
+        tenant_name: tenant?.business_name || 'Your Brand'
+      });
+    }
 
     console.log(`[Worker] Job ${job.id} completed successfully`);
     
@@ -112,6 +132,13 @@ const contentWorker = new Worker('ContentSysQueue', async (job) => {
       "UPDATE content_queue SET status='failed' WHERE id=$1", 
       [queueId]
     );
+    
+    // Notify failure
+    const content = await db.queryOne('SELECT * FROM content_queue WHERE id = $1', [queueId]);
+    const user = await db.queryOne('SELECT id FROM users WHERE tenant_id = $1 OR role = \'admin\' LIMIT 1', [tenantId]);
+    if (user) {
+      await emailService.notifyContentFailed(user.id, content, error instanceof Error ? error.message : String(error));
+    }
     
     throw error;
   }
