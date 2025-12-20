@@ -9,29 +9,28 @@ class DatabaseClient {
 
   constructor() {
     const connectionString = process.env.DATABASE_URL;
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // SSL Configuration - default to enabled with unverified certs for cloud databases
+    // Only disable if explicitly set
+    let sslConfig: any = isProduction ? { rejectUnauthorized: false } : false;
 
     // Parse SSL mode from connection string
     const sslMode = connectionString?.match(/sslmode=(\w+)/)?.[1];
-    let sslConfig: any = false;
-
-    // Handle SSL configuration for cloud databases
     if (sslMode === 'disable') {
       sslConfig = false;
-    } else if (sslMode === 'require' || sslMode === 'prefer') {
-      // Explicit SSL mode in connection string
-      sslConfig = { rejectUnauthorized: false };
-    } else if (process.env.NODE_ENV === 'production' || connectionString?.includes('postgres://') || connectionString?.includes('postgresql://')) {
-      // In production or with cloud database URLs, default to SSL with unverified certs
-      // This handles Coolify, Railway, Render, Heroku, Supabase, etc.
+    } else if (sslMode === 'require' || sslMode === 'prefer' || sslMode === 'verify-full') {
       sslConfig = { rejectUnauthorized: false };
     }
 
-    // Allow explicit override via environment variable
-    if (process.env.DATABASE_SSL === 'false') {
+    // Allow explicit override via environment variable (highest priority)
+    if (process.env.DATABASE_SSL === 'false' || process.env.DATABASE_SSL === '0') {
       sslConfig = false;
-    } else if (process.env.DATABASE_SSL === 'true') {
+    } else if (process.env.DATABASE_SSL === 'true' || process.env.DATABASE_SSL === '1') {
       sslConfig = { rejectUnauthorized: false };
     }
+
+    console.log(`[DB] Connecting with SSL: ${sslConfig ? 'enabled (rejectUnauthorized: false)' : 'disabled'}`);
 
     this.pool = new Pool({
       connectionString: connectionString,
