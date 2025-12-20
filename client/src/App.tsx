@@ -7,12 +7,14 @@ import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FileText, LogOut, Image, Terminal,
-  GitBranch, Calendar, BarChart3, UserCog, Sun, Moon, Menu, X
+  GitBranch, Calendar, BarChart3, UserCog, Sun, Moon, Menu, X,
+  Activity, Settings, ClipboardList, User
 } from 'lucide-react';
 
 // Lazy load page components (f94 - Performance)
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Tenants = lazy(() => import('./pages/Tenants'));
+const TenantList = lazy(() => import('./pages/TenantList'));
+const TenantOnboarding = lazy(() => import('./pages/TenantOnboarding'));
 const TenantDetail = lazy(() => import('./pages/TenantDetail'));
 const Content = lazy(() => import('./pages/Content'));
 const ImageLibrary = lazy(() => import('./pages/ImageLibrary'));
@@ -21,6 +23,10 @@ const Workflows = lazy(() => import('./pages/Workflows'));
 const ContentCalendar = lazy(() => import('./pages/Calendar'));
 const UserManagement = lazy(() => import('./pages/UserManagement'));
 const Analytics = lazy(() => import('./pages/Analytics'));
+const Profile = lazy(() => import('./pages/Profile'));
+const SystemHealth = lazy(() => import('./pages/SystemHealth'));
+const AuditLog = lazy(() => import('./pages/AuditLog'));
+const SystemSettings = lazy(() => import('./pages/SystemSettings'));
 
 // Direct imports for auth pages (small, needed immediately)
 import Login from './pages/Login';
@@ -184,6 +190,9 @@ function Layout() {
               <NavItem to="/users" icon={UserCog} onClick={closeMobileMenu}>User Management</NavItem>
               <NavItem to="/prompts" icon={Terminal} onClick={closeMobileMenu}>Prompts</NavItem>
               <NavItem to="/workflows" icon={GitBranch} onClick={closeMobileMenu}>Workflows</NavItem>
+              <NavItem to="/system-health" icon={Activity} onClick={closeMobileMenu}>System Health</NavItem>
+              <NavItem to="/settings" icon={Settings} onClick={closeMobileMenu}>System Settings</NavItem>
+              <NavItem to="/audit-log" icon={ClipboardList} onClick={closeMobileMenu}>Audit Log</NavItem>
             </>
           )}
 
@@ -198,10 +207,10 @@ function Layout() {
 
         <div className="p-4 border-t border-gray-800">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Link to="/profile" className="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors">
               <div className="w-2 h-2 rounded-full bg-green-400" aria-hidden="true"></div>
               <span className="truncate max-w-[100px]">{user.email}</span>
-            </div>
+            </Link>
             <div className="flex items-center gap-1">
               <ThemeToggle />
               <button
@@ -256,7 +265,8 @@ function Layout() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/tenants" element={<Tenants />} />
+              <Route path="/tenants" element={<TenantList />} />
+              <Route path="/tenants/new" element={<TenantOnboarding />} />
               <Route path="/tenants/:id" element={<TenantDetail />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/content" element={<Content />} />
@@ -265,6 +275,10 @@ function Layout() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/prompts" element={<Prompts />} />
               <Route path="/workflows" element={<Workflows />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/system-health" element={<SystemHealth />} />
+              <Route path="/audit-log" element={<AuditLog />} />
+              <Route path="/settings" element={<SystemSettings />} />
             </Routes>
           </Suspense>
         </main>
