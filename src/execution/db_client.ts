@@ -8,29 +8,35 @@ class DatabaseClient {
   private pool: Pool;
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
+    let connectionString = process.env.DATABASE_URL || '';
     const isProduction = process.env.NODE_ENV === 'production';
 
-    // SSL Configuration - default to enabled with unverified certs for cloud databases
-    // Only disable if explicitly set
-    let sslConfig: any = isProduction ? { rejectUnauthorized: false } : false;
+    // For cloud databases with self-signed certs, we need to disable TLS verification
+    // This is safe for trusted cloud providers (Coolify, Railway, Render, Heroku, Supabase, etc.)
+    if (isProduction || process.env.DATABASE_SSL === 'true' || process.env.DATABASE_SSL === '1') {
+      // Set global Node.js TLS setting as fallback (pg sometimes ignores ssl option)
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+    }
 
-    // Parse SSL mode from connection string
-    const sslMode = connectionString?.match(/sslmode=(\w+)/)?.[1];
-    if (sslMode === 'disable') {
+    // Determine SSL config
+    let sslConfig: any = false;
+    const sslMode = connectionString.match(/sslmode=(\w+)/)?.[1];
+
+    // Remove sslmode from connection string to avoid conflicts
+    connectionString = connectionString.replace(/[?&]sslmode=\w+/g, '');
+    // Clean up any dangling ? or &
+    connectionString = connectionString.replace(/\?&/, '?').replace(/\?$/, '');
+
+    if (sslMode === 'disable' || process.env.DATABASE_SSL === 'false' || process.env.DATABASE_SSL === '0') {
       sslConfig = false;
-    } else if (sslMode === 'require' || sslMode === 'prefer' || sslMode === 'verify-full') {
+      // Reset TLS setting if SSL is disabled
+      delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+    } else if (isProduction || sslMode === 'require' || sslMode === 'prefer' || process.env.DATABASE_SSL === 'true') {
       sslConfig = { rejectUnauthorized: false };
     }
 
-    // Allow explicit override via environment variable (highest priority)
-    if (process.env.DATABASE_SSL === 'false' || process.env.DATABASE_SSL === '0') {
-      sslConfig = false;
-    } else if (process.env.DATABASE_SSL === 'true' || process.env.DATABASE_SSL === '1') {
-      sslConfig = { rejectUnauthorized: false };
-    }
-
-    console.log(`[DB] Connecting with SSL: ${sslConfig ? 'enabled (rejectUnauthorized: false)' : 'disabled'}`);
+    console.log(`[DB] SSL Config: ${JSON.stringify(sslConfig)}`);
+    console.log(`[DB] NODE_TLS_REJECT_UNAUTHORIZED: ${process.env.NODE_TLS_REJECT_UNAUTHORIZED}`);
 
     this.pool = new Pool({
       connectionString: connectionString,
