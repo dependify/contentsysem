@@ -96,6 +96,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
                         <button
                             onClick={() => setIsCollapsed(true)}
                             className="p-1 text-gray-400 hover:text-white rounded lg:block hidden"
+                            aria-label="Collapse sidebar"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -104,6 +105,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
                     <button
                         onClick={() => setIsCollapsed(false)}
                         className="w-full flex justify-center p-2 text-gray-400 hover:text-white rounded"
+                        aria-label="Expand sidebar"
                     >
                         <ChevronRight size={18} />
                     </button>
@@ -153,6 +155,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
             <button
                 onClick={() => setIsMobileOpen(true)}
                 className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-gray-800 rounded-lg border border-gray-700"
+                aria-label="Open mobile menu"
             >
                 <Menu size={20} />
             </button>
@@ -173,6 +176,7 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
                 <button
                     onClick={() => setIsMobileOpen(false)}
                     className="absolute top-4 right-4 p-1 text-gray-400 hover:text-white"
+                    aria-label="Close mobile menu"
                 >
                     <X size={20} />
                 </button>
