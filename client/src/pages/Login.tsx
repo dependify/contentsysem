@@ -3,16 +3,21 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { Spinner } from '../components/ui';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
       // Direct call to axios to avoid interceptor issues if any
       const res = await api.post('/auth/login', { email, password });
@@ -22,6 +27,8 @@ export default function Login() {
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,9 +67,11 @@ export default function Login() {
           
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded transition-colors"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/70 disabled:cursor-not-allowed text-white font-medium py-2 rounded transition-colors flex items-center justify-center gap-2"
           >
-            Sign In
+            {loading ? <Spinner size="sm" className="text-white" /> : null}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
         

@@ -307,16 +307,18 @@ body {
 }
 
 /* ===== Card Styles ===== */
-.card {
-  @apply bg-gray-800 border border-gray-700 rounded-lg;
-}
+@layer components {
+  .card {
+    @apply bg-gray-800 border border-gray-700 rounded-lg;
+  }
 
-.card-hover {
-  @apply bg-gray-800 border border-gray-700 rounded-lg transition-all duration-200 hover:bg-gray-700/50 hover:border-gray-600 hover:shadow-lg;
-}
+  .card-hover {
+    @apply bg-gray-800 border border-gray-700 rounded-lg transition-all duration-200 hover:bg-gray-700/50 hover:border-gray-600 hover:shadow-lg;
+  }
 
-.card-interactive {
-  @apply bg-gray-800 border border-gray-700 rounded-lg transition-all duration-200 hover:bg-gray-700/50 hover:border-gray-600 hover:shadow-lg cursor-pointer active:scale-[0.99];
+  .card-interactive {
+    @apply bg-gray-800 border border-gray-700 rounded-lg transition-all duration-200 hover:bg-gray-700/50 hover:border-gray-600 hover:shadow-lg cursor-pointer active:scale-[0.99];
+  }
 }
 
 /* ===== Button Base ===== */
@@ -588,7 +590,7 @@ body {
 
 /* ===== Stat Card ===== */
 .stat-card {
-  @apply card p-6;
+  @apply bg-gray-800 border border-gray-700 rounded-lg p-6;
 }
 
 .stat-value {
