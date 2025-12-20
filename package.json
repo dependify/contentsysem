@@ -12,8 +12,7 @@
     "worker": "ts-node --transpile-only src/worker.ts",
     "setup": "node setup.js",
     "db:init": "node scripts/init-database.js",
-    "test:system": "node test-system.js",
-    "postinstall": "npm run build"
+    "test:system": "node test-system.js"
   },
   "dependencies": {
     "@mastra/core": "^0.1.0",
