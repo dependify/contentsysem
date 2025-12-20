@@ -1,6 +1,6 @@
 // User Profile Page
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Shield, Camera, Save, Key, Building } from 'lucide-react';
+import { Mail, Shield, Camera, Save, Key, Building } from 'lucide-react';
 import { Button, Card, CardContent, Spinner } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';

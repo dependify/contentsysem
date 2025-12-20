@@ -1,8 +1,8 @@
 // Simple image editing (crop, resize)
 import { useState, useRef, useEffect, useCallback } from 'react';
 import {
-    Crop, Maximize2, RotateCw, FlipHorizontal, FlipVertical,
-    Download, X, Check, ZoomIn, ZoomOut, RotateCcw
+    Crop, RotateCw, FlipHorizontal, FlipVertical,
+    X, Check, ZoomIn, ZoomOut, RotateCcw
 } from 'lucide-react';
 import { Button, Modal, Spinner } from './ui';
 
@@ -299,8 +299,8 @@ export default function ImageEditor({ imageUrl, onSave, onClose, isOpen }: Image
                                         key={label}
                                         onClick={() => setAspectRatio(value)}
                                         className={`px-2 py-1 text-xs rounded transition-colors ${aspectRatio === value
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            ? 'bg-indigo-600 text-white'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                             }`}
                                     >
                                         {label}

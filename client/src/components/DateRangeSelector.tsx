@@ -1,6 +1,6 @@
 // Custom Date Range Selector Component
 import { useState, useRef, useEffect } from 'react';
-import { Calendar, ChevronDown, X } from 'lucide-react';
+import { Calendar, ChevronDown } from 'lucide-react';
 import { Button } from './ui';
 import { format, subDays, subMonths, startOfMonth, endOfMonth, startOfYear } from 'date-fns';
 

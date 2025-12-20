@@ -1,8 +1,8 @@
 // Image selection modal for content
 import { useState, useEffect } from 'react';
 import {
-    Image, Check, Search, Upload, Wand2, X,
-    Grid, List, Loader2
+    Image, Check, Search, Upload, Wand2,
+    Grid, List
 } from 'lucide-react';
 import { Button, Modal, Badge, Spinner } from './ui';
 import api from '../lib/api';

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import {
     GripVertical, Trash, Plus, Wand2, ChevronUp, ChevronDown,
-    Type, Heading1, Heading2, List, Image
+    Type, Heading1, List, Image
 } from 'lucide-react';
 import { Button, Modal, Textarea, Spinner } from './ui';
 import api from '../lib/api';
@@ -113,8 +113,8 @@ export default function SectionEditor({ sections, onChange, tenantId, contentId 
                 <div
                     key={section.id}
                     className={`group border rounded-lg transition-colors ${editingId === section.id
-                            ? 'border-indigo-500 bg-gray-800'
-                            : 'border-gray-700 hover:border-gray-600'
+                        ? 'border-indigo-500 bg-gray-800'
+                        : 'border-gray-700 hover:border-gray-600'
                         }`}
                 >
                     {/* Section Header */}

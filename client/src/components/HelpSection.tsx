@@ -5,7 +5,7 @@ import {
     ChevronRight, Search, FileText, Zap, Users, Settings,
     Calendar, Image, BarChart2
 } from 'lucide-react';
-import { Button, Card, Modal, Badge } from './ui';
+import { Modal } from './ui';
 
 interface HelpArticle {
     id: string;

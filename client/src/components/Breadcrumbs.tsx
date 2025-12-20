@@ -42,7 +42,7 @@ export default function Breadcrumbs({ pageTitle, customItems }: BreadcrumbsProps
         const items: BreadcrumbItem[] = [];
         let currentPath = '';
 
-        pathSegments.forEach((segment, index) => {
+        pathSegments.forEach((segment, _index) => {
             currentPath += `/${segment}`;
 
             // Skip numeric IDs in breadcrumb labels but include in path

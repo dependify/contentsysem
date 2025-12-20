@@ -194,7 +194,7 @@ export function Prefetch({
 
 // Optimized re-render detector (dev only)
 export function useWhyDidYouUpdate(name: string, props: Record<string, any>) {
-    const previousProps = useRef<Record<string, any>>();
+    const previousProps = useRef<Record<string, any> | undefined>(undefined);
 
     useEffect(() => {
         if (previousProps.current) {
@@ -236,7 +236,7 @@ export function useIdleCallback(callback: () => void, options?: IdleRequestOptio
 export function useBatchedState<T extends Record<string, any>>(initialState: T) {
     const [state, setState] = useState(initialState);
     const pendingUpdates = useRef<Partial<T>>({});
-    const rafId = useRef<number>();
+    const rafId = useRef<number | undefined>(undefined);
 
     const batchUpdate = useCallback((updates: Partial<T>) => {
         pendingUpdates.current = { ...pendingUpdates.current, ...updates };

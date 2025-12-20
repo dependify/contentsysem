@@ -182,7 +182,7 @@ export function Badge({ variant = 'gray', children, className }: BadgeProps) {
     return <span className={cn(variants[variant], className)}>{children}</span>;
 }
 
-// ===== Modal Component =====
+// ===== Modal Component (f93: Enhanced accessibility) =====
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -193,16 +193,55 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) {
+    const modalRef = React.useRef<HTMLDivElement>(null);
+    const titleId = React.useId();
+
+    // f93: Handle body overflow and ESC key
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+
+            // Close on Escape key
+            const handleEscape = (e: KeyboardEvent) => {
+                if (e.key === 'Escape') onClose();
+            };
+            document.addEventListener('keydown', handleEscape);
+
+            // Focus the modal when it opens
+            modalRef.current?.focus();
+
+            return () => {
+                document.removeEventListener('keydown', handleEscape);
+            };
         } else {
             document.body.style.overflow = '';
         }
         return () => {
             document.body.style.overflow = '';
         };
-    }, [isOpen]);
+    }, [isOpen, onClose]);
+
+    // f93: Focus trap - keep focus within modal
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key !== 'Tab') return;
+
+        const modal = modalRef.current;
+        if (!modal) return;
+
+        const focusableElements = modal.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement?.focus();
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -214,19 +253,30 @@ export function Modal({ isOpen, onClose, title, children, footer, size = 'md' }:
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div
+            className="modal-overlay"
+            onClick={onClose}
+            role="presentation"
+        >
             <div
+                ref={modalRef}
                 className={cn('modal-content', sizes[size])}
                 onClick={e => e.stopPropagation()}
+                onKeyDown={handleKeyDown}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={title ? titleId : undefined}
+                tabIndex={-1}
             >
                 {title && (
                     <div className="modal-header">
-                        <h3 className="text-lg font-semibold text-white">{title}</h3>
+                        <h3 id={titleId} className="text-lg font-semibold text-white">{title}</h3>
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-white transition-colors"
+                            aria-label="Close dialog"
                         >
-                            <X size={20} />
+                            <X size={20} aria-hidden="true" />
                         </button>
                     </div>
                 )}
@@ -280,13 +330,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     return (
         <ToastContext.Provider value={{ addToast, removeToast }}>
             {children}
-            <div className="toast-container">
+            {/* f93: Toast container with ARIA live region for accessibility */}
+            <div className="toast-container" role="region" aria-label="Notifications" aria-live="polite">
                 {toasts.map(toast => (
-                    <div key={toast.id} className={`toast-${toast.type}`}>
-                        {icons[toast.type]}
+                    <div 
+                        key={toast.id} 
+                        className={`toast-${toast.type}`}
+                        role="alert"
+                        aria-atomic="true"
+                    >
+                        <span aria-hidden="true">{icons[toast.type]}</span>
                         <span className="flex-1">{toast.message}</span>
-                        <button onClick={() => removeToast(toast.id)} className="opacity-70 hover:opacity-100">
-                            <X size={16} />
+                        <button 
+                            onClick={() => removeToast(toast.id)} 
+                            className="opacity-70 hover:opacity-100"
+                            aria-label="Dismiss notification"
+                        >
+                            <X size={16} aria-hidden="true" />
                         </button>
                     </div>
                 ))}

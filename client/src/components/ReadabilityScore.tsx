@@ -1,6 +1,6 @@
 // Word count and readability score component
 import { useMemo } from 'react';
-import { FileText, Clock, BarChart2, BookOpen } from 'lucide-react';
+import { Clock, BarChart2, BookOpen } from 'lucide-react';
 import { Card, ProgressBar } from './ui';
 
 interface ReadabilityScoreProps {
@@ -80,7 +80,7 @@ export default function ReadabilityScore({ content, targetWordCount = 1500 }: Re
                     <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-gray-400">Word Count</span>
                         <span className={`font-medium ${wordCountStatus === 'success' ? 'text-green-400' :
-                                wordCountStatus === 'warning' ? 'text-yellow-400' : 'text-red-400'
+                            wordCountStatus === 'warning' ? 'text-yellow-400' : 'text-red-400'
                             }`}>
                             {metrics.wordCount.toLocaleString()} / {targetWordCount.toLocaleString()}
                         </span>

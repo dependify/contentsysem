@@ -1,7 +1,7 @@
 // Image search and filter by tags
 import { useState, useMemo, useEffect } from 'react';
-import { Search, X, Tag, Filter, Grid, List, SortAsc } from 'lucide-react';
-import { Button, Badge, Input } from './ui';
+import { Search, X, Tag, Filter, SortAsc } from 'lucide-react';
+import { Button, Badge } from './ui';
 
 interface ImageAsset {
     id: number;
@@ -166,8 +166,8 @@ export default function ImageSearchFilter({
                                 key={tag}
                                 onClick={() => toggleTag(tag)}
                                 className={`px-2 py-1 rounded-full text-xs transition-colors ${selectedTags.includes(tag)
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                     }`}
                             >
                                 {tag}

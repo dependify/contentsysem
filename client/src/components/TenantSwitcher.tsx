@@ -4,14 +4,15 @@ import { Building, ChevronDown, Check, Plus, Search } from 'lucide-react';
 import { useTenant } from '../context/TenantContext';
 import api from '../lib/api';
 
-interface Tenant {
+// Use Tenant type from context API response (only id and business_name needed for display)
+type TenantInfo = {
     id: number;
     business_name: string;
-}
+};
 
 export default function TenantSwitcher() {
     const { currentTenant, setCurrentTenant } = useTenant();
-    const [tenants, setTenants] = useState<Tenant[]>([]);
+    const [tenants, setTenants] = useState<TenantInfo[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
@@ -49,8 +50,9 @@ export default function TenantSwitcher() {
         }
     };
 
-    const handleTenantSelect = (tenant: Tenant) => {
-        setCurrentTenant(tenant);
+    const handleTenantSelect = (tenant: TenantInfo) => {
+        // Cast to full Tenant type for context (API returns full objects)
+        setCurrentTenant(tenant as any);
         setIsOpen(false);
         setSearchQuery('');
     };

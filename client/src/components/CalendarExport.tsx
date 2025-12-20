@@ -66,15 +66,6 @@ export function CalendarExport({ items, tenantName = 'ContentSys' }: CalendarExp
         URL.revokeObjectURL(url);
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const googleCalendarUrl = (item: ScheduledContent) => {
-        const start = new Date(item.scheduled_for);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
-        const formatGoogleDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-
-        return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.title)}&dates=${formatGoogleDate(start)}/${formatGoogleDate(end)}&details=${encodeURIComponent('Scheduled content publishing via ContentSys')}`;
-    };
-
     return (
         <>
             <Button variant="secondary" onClick={() => setShowModal(true)}>

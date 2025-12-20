@@ -1,6 +1,6 @@
 // Notification Center with Real-time Updates
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, AlertCircle, Info, CheckCircle, Clock, Trash2 } from 'lucide-react';
+import { Bell, Check, AlertCircle, Info, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import api from '../lib/api';
 
 interface Notification {
@@ -16,7 +16,7 @@ interface Notification {
 export default function NotificationCenter() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [_loading, _setLoading] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {

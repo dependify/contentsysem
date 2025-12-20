@@ -1,12 +1,11 @@
 // Embedded image management for content editor
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
     Image, Plus, Trash, MoveUp, MoveDown, Edit,
     Link, Check, Upload
 } from 'lucide-react';
-import { Button, Modal, Input, Card, Spinner } from './ui';
+import { Button, Modal, Input, Card } from './ui';
 import ImageSelector from './ImageSelector';
-import api from '../lib/api';
 
 interface EmbeddedImage {
     id: string;
@@ -24,14 +23,9 @@ interface EmbeddedImageManagerProps {
     onInsertImage?: (imageUrl: string, alt: string) => void;
 }
 
-export default function EmbeddedImageManager({
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    contentId,
-    tenantId,
-    images,
-    onChange,
-    onInsertImage,
-}: EmbeddedImageManagerProps) {
+export default function EmbeddedImageManager(props: EmbeddedImageManagerProps) {
+    const { tenantId, images, onChange, onInsertImage } = props;
+    // contentId is available via props if needed later
     const [showModal, setShowModal] = useState(false);
     const [showLibrary, setShowLibrary] = useState(false);
     const [editingImage, setEditingImage] = useState<EmbeddedImage | null>(null);

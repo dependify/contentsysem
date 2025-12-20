@@ -122,7 +122,6 @@ export function useAutosave({
 }
 
 // Autosave Status Indicator Component
-import React from 'react';
 import { Cloud, CloudOff, Loader2, Check, AlertCircle } from 'lucide-react';
 
 interface AutosaveIndicatorProps {

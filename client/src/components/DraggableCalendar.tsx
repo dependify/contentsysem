@@ -1,5 +1,5 @@
 // Calendar drag-and-drop rescheduling
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     ChevronLeft, ChevronRight,
     CheckCircle, AlertCircle, Loader2, GripVertical
