@@ -14,10 +14,23 @@ class DatabaseClient {
     const sslMode = connectionString?.match(/sslmode=(\w+)/)?.[1];
     let sslConfig: any = false;
 
-    if (sslMode === 'require') {
-      sslConfig = { rejectUnauthorized: false };
-    } else if (sslMode === 'disable') {
+    // Handle SSL configuration for cloud databases
+    if (sslMode === 'disable') {
       sslConfig = false;
+    } else if (sslMode === 'require' || sslMode === 'prefer') {
+      // Explicit SSL mode in connection string
+      sslConfig = { rejectUnauthorized: false };
+    } else if (process.env.NODE_ENV === 'production' || connectionString?.includes('postgres://') || connectionString?.includes('postgresql://')) {
+      // In production or with cloud database URLs, default to SSL with unverified certs
+      // This handles Coolify, Railway, Render, Heroku, Supabase, etc.
+      sslConfig = { rejectUnauthorized: false };
+    }
+
+    // Allow explicit override via environment variable
+    if (process.env.DATABASE_SSL === 'false') {
+      sslConfig = false;
+    } else if (process.env.DATABASE_SSL === 'true') {
+      sslConfig = { rejectUnauthorized: false };
     }
 
     this.pool = new Pool({
