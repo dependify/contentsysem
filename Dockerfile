@@ -17,6 +17,9 @@ RUN cd client && npm ci --only=production && npm cache clean --force
 FROM base AS builder
 WORKDIR /app
 
+# Force development mode during build to install devDependencies
+ENV NODE_ENV=development
+
 # Copy package files and install all dependencies (including dev)
 COPY package*.json ./
 COPY client/package*.json ./client/
@@ -32,6 +35,9 @@ RUN npm run build
 # Production image
 FROM base AS runner
 WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
