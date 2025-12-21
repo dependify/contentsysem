@@ -588,7 +588,7 @@ body {
 
 /* ===== Stat Card ===== */
 .stat-card {
-  @apply card p-6;
+  @apply bg-gray-800 border border-gray-700 rounded-lg p-6;
 }
 
 .stat-value {
