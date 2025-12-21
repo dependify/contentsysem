@@ -8,7 +8,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } f
 import {
   LayoutDashboard, Users, FileText, LogOut, Image, Terminal,
   GitBranch, Calendar, BarChart3, UserCog, Sun, Moon, Menu, X,
-  Activity, Settings, ClipboardList, User
+  Activity, Settings, ClipboardList, HelpCircle, Bell, Download, Key,
+  Check, AlertCircle, Info, CheckCircle, Clock, Trash2
 } from 'lucide-react';
 
 // Lazy load page components (f94 - Performance)
@@ -41,6 +42,8 @@ import { ToastProvider } from './components/ui';
 import GlobalSearch from './components/GlobalSearch';
 import SkipLink from './components/SkipLink';
 import PageLoader from './components/PageLoader';
+import HelpSection from './components/HelpSection';
+import OnboardingTour from './components/OnboardingTour';
 import { clsx } from 'clsx';
 
 // f93: Added aria-current for accessibility
@@ -70,7 +73,7 @@ function TenantSelector() {
   if (loading || tenants.length === 0) return null;
 
   return (
-    <div className="px-4 py-3 border-b border-gray-800">
+    <div className="px-4 py-3 border-b border-gray-800 tenant-selector">
       <label className="text-xs text-gray-500 block mb-1">Active Tenant</label>
       <select
         className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-gray-200"
@@ -102,12 +105,114 @@ function ThemeToggle() {
   );
 }
 
+// Inline Notification Panel for modal use
+function NotificationPanel({ onClose }: { onClose: () => void }) {
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'success', title: 'Content Published', message: 'Your article was published successfully.', read: false, created_at: new Date().toISOString() },
+    { id: 2, type: 'info', title: 'New User Registered', message: 'John Doe has registered and is pending approval.', read: false, created_at: new Date(Date.now() - 3600000).toISOString() },
+    { id: 3, type: 'warning', title: 'Low API Credits', message: 'Your API credits are running low. Please top up.', read: true, created_at: new Date(Date.now() - 86400000).toISOString() },
+  ]);
+
+  const markAsRead = (id: number) => {
+    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const deleteNotification = (id: number) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+  };
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'success': return CheckCircle;
+      case 'warning': return AlertCircle;
+      case 'error': return AlertCircle;
+      default: return Info;
+    }
+  };
+
+  const getIconColor = (type: string) => {
+    switch (type) {
+      case 'success': return 'text-green-400';
+      case 'warning': return 'text-yellow-400';
+      case 'error': return 'text-red-400';
+      default: return 'text-blue-400';
+    }
+  };
+
+  const formatTime = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    return 'Just now';
+  };
+
+  return (
+    <div className="max-h-[400px] overflow-y-auto">
+      {notifications.length === 0 ? (
+        <div className="p-8 text-center text-gray-500">
+          <Bell size={32} className="mx-auto mb-2 opacity-50" />
+          No notifications
+        </div>
+      ) : (
+        notifications.map((notification) => {
+          const Icon = getIcon(notification.type);
+          return (
+            <div key={notification.id} className={`p-4 border-b border-gray-700 hover:bg-gray-700/50 ${!notification.read ? 'bg-indigo-600/10' : ''}`}>
+              <div className="flex gap-3">
+                <Icon size={20} className={getIconColor(notification.type)} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className={`font-medium truncate ${notification.read ? 'text-gray-300' : 'text-white'}`}>
+                      {notification.title}
+                    </h4>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {!notification.read && (
+                        <button onClick={() => markAsRead(notification.id)} className="p-1 text-gray-500 hover:text-white" title="Mark as read">
+                          <Check size={14} />
+                        </button>
+                      )}
+                      <button onClick={() => deleteNotification(notification.id)} className="p-1 text-gray-500 hover:text-red-400" title="Delete">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-1">{notification.message}</p>
+                  <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                    <Clock size={12} />
+                    {formatTime(notification.created_at)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
 
   // f92: Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Feature modals
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if onboarding needed
+  useEffect(() => {
+    const onboardingCompleted = localStorage.getItem('onboarding_completed');
+    const onboardingSkipped = localStorage.getItem('onboarding_skipped');
+    if (!onboardingCompleted && !onboardingSkipped && user) {
+      setTimeout(() => setShowOnboarding(true), 1000);
+    }
+  }, [user]);
 
   // f92: Close mobile menu on route change
   useEffect(() => {
@@ -136,6 +241,29 @@ function Layout() {
       {/* f93: Skip Link for accessibility */}
       <SkipLink />
 
+      {/* Onboarding Tour */}
+      {showOnboarding && (
+        <OnboardingTour onComplete={() => setShowOnboarding(false)} />
+      )}
+
+      {/* Help Modal */}
+      <HelpSection isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      {/* Notifications Modal */}
+      {notificationsOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-end p-4" onClick={() => setNotificationsOpen(false)}>
+          <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md shadow-2xl mt-14 mr-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h3 className="font-semibold">Notifications</h3>
+              <button onClick={() => setNotificationsOpen(false)} className="text-gray-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+            <NotificationPanel onClose={() => setNotificationsOpen(false)} />
+          </div>
+        </div>
+      )}
+
       {/* f92: Mobile menu backdrop */}
       {mobileMenuOpen && (
         <div
@@ -149,9 +277,7 @@ function Layout() {
       <aside
         className={clsx(
           "bg-gray-950 border-r border-gray-800 flex flex-col z-40 transition-transform duration-300",
-          // Desktop: always visible, fixed width
           "md:relative md:translate-x-0 md:w-64",
-          // Mobile: slide from left
           "fixed inset-y-0 left-0 w-64",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
@@ -161,12 +287,9 @@ function Layout() {
         {/* Header with close button on mobile */}
         <div className="p-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold gradient-text">
-              ContentSys
-            </h1>
+            <h1 className="text-2xl font-bold gradient-text">ContentSys</h1>
             <p className="text-xs text-gray-500 mt-1">Multi-Tenant AI Engine</p>
           </div>
-          {/* f92: Close button for mobile */}
           <button
             className="md:hidden p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
             onClick={closeMobileMenu}
@@ -248,8 +371,27 @@ function Layout() {
 
           <GlobalSearch />
 
-          <div className="hidden sm:flex items-center gap-4">
-            <span className="text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <button
+              onClick={() => setNotificationsOpen(true)}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg relative"
+              title="Notifications"
+            >
+              <Bell size={18} />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
+            {/* Help */}
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+              title="Help & Documentation"
+            >
+              <HelpCircle size={18} />
+            </button>
+
+            <span className="hidden sm:block text-sm text-gray-500">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>

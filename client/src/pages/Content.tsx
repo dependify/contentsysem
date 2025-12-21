@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { format } from 'date-fns';
 import {
@@ -161,7 +161,7 @@ export default function Content() {
       cancelled: 'bg-gray-600 text-gray-300',
       draft_ready: 'bg-purple-900 text-purple-200',
     };
-    const icons: Record<string, JSX.Element> = {
+    const icons: Record<string, React.ReactNode> = {
       complete: <CheckCircle size={12} />,
       failed: <XCircle size={12} />,
       review_pending: <AlertCircle size={12} />,
