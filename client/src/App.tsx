@@ -8,7 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } f
 import {
   LayoutDashboard, Users, FileText, LogOut, Image, Terminal,
   GitBranch, Calendar, BarChart3, UserCog, Sun, Moon, Menu, X,
-  Activity, Settings, ClipboardList, HelpCircle, Bell, Download, Key,
+  Activity, Settings, ClipboardList, HelpCircle, Bell,
   Check, AlertCircle, Info, CheckCircle, Clock, Trash2
 } from 'lucide-react';
 
@@ -106,7 +106,7 @@ function ThemeToggle() {
 }
 
 // Inline Notification Panel for modal use
-function NotificationPanel({ onClose }: { onClose: () => void }) {
+function NotificationPanel({ onClose: _onClose }: { onClose: () => void }) {
   const [notifications, setNotifications] = useState([
     { id: 1, type: 'success', title: 'Content Published', message: 'Your article was published successfully.', read: false, created_at: new Date().toISOString() },
     { id: 2, type: 'info', title: 'New User Registered', message: 'John Doe has registered and is pending approval.', read: false, created_at: new Date(Date.now() - 3600000).toISOString() },
