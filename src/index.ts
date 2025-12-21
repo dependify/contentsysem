@@ -565,7 +565,9 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Start the server
-startServer();
+// Start the server if running directly
+if (require.main === module) {
+  startServer();
+}
 
 export { app };

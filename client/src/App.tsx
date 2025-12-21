@@ -142,7 +142,7 @@ function Layout() {
       {/* Sidebar - f92: Responsive with mobile slide-in */}
       <aside
         className={clsx(
-          "bg-gray-950 border-r border-gray-800 flex flex-col z-40 transition-transform duration-300",
+          "bg-gray-900/95 backdrop-blur-md border-r border-gray-800 flex flex-col z-40 transition-transform duration-300",
           // Desktop: always visible, fixed width
           "md:relative md:translate-x-0 md:w-64",
           // Mobile: slide from left
@@ -153,12 +153,12 @@ function Layout() {
         aria-label="Main navigation"
       >
         {/* Header with close button on mobile */}
-        <div className="p-6 flex items-center justify-between">
+        <div className="p-6 flex items-center justify-between border-b border-gray-800/50">
           <div>
-            <h1 className="text-2xl font-bold gradient-text">
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
               ContentSys
             </h1>
-            <p className="text-xs text-gray-500 mt-1">Multi-Tenant AI Engine</p>
+            <p className="text-xs text-gray-500 mt-1 font-medium tracking-wide">AI CONTENT ENGINE</p>
           </div>
           {/* f92: Close button for mobile */}
           <button
@@ -171,23 +171,25 @@ function Layout() {
         </div>
 
         {/* Tenant Selector */}
-        <TenantSelector />
+        <div className="bg-gray-900/50">
+          <TenantSelector />
+        </div>
 
-        <nav className="flex-1 px-2 space-y-1 overflow-y-auto py-4" aria-label="Sidebar">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto py-6" aria-label="Sidebar">
           {user.role === 'admin' && (
             <>
-              <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Admin God Mode
+              <div className="px-4 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
+                System Administration
               </div>
               <NavItem to="/" icon={LayoutDashboard} onClick={closeMobileMenu}>System Status</NavItem>
               <NavItem to="/tenants" icon={Users} onClick={closeMobileMenu}>Tenant Management</NavItem>
               <NavItem to="/users" icon={UserCog} onClick={closeMobileMenu}>User Management</NavItem>
-              <NavItem to="/prompts" icon={Terminal} onClick={closeMobileMenu}>Prompts</NavItem>
+              <NavItem to="/prompts" icon={Terminal} onClick={closeMobileMenu}>Prompts & Config</NavItem>
               <NavItem to="/workflows" icon={GitBranch} onClick={closeMobileMenu}>Workflows</NavItem>
             </>
           )}
 
-          <div className="mt-8 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="mt-8 px-4 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
             Content Workspace
           </div>
           <NavItem to="/content" icon={FileText} onClick={closeMobileMenu}>Content Queue</NavItem>
@@ -196,34 +198,36 @@ function Layout() {
           <NavItem to="/analytics" icon={BarChart3} onClick={closeMobileMenu}>Analytics</NavItem>
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 bg-gray-900/50">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2 text-sm text-gray-400">
-              <div className="w-2 h-2 rounded-full bg-green-400" aria-hidden="true"></div>
-              <span className="truncate max-w-[100px]">{user.email}</span>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white">
+                {user.email[0].toUpperCase()}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-gray-200 truncate max-w-[100px]">{user.email.split('@')[0]}</span>
+                <span className="text-xs text-gray-500 capitalize">{user.role}</span>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <ThemeToggle />
               <button
                 onClick={logout}
-                className="p-2 text-gray-500 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
                 aria-label="Logout"
               >
                 <LogOut size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
-          {user.role === 'admin' && (
-            <span className="text-xs text-indigo-400 block">Administrator</span>
-          )}
         </div>
       </aside>
 
       {/* Main Content - f92: Responsive */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-900">
         {/* Top Bar */}
         <header
-          className="h-14 border-b border-gray-800 flex items-center justify-between px-4 md:px-6 bg-gray-900/50"
+          className="h-16 border-b border-gray-800/50 flex items-center justify-between px-4 md:px-8 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-30"
           role="banner"
         >
           {/* f92: Mobile hamburger menu */}
