@@ -26,6 +26,7 @@ import { z } from 'zod';
 import path from 'path';
 import multer from 'multer';
 import fs from 'fs';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -34,18 +35,40 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
+// Security: Use random filenames to prevent path traversal and overwriting
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/')
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname)
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    // Sanitize extension (allow only safe alphanumeric characters)
+    const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, '');
+    cb(null, 'upload-' + uniqueSuffix + safeExt)
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Limit file size to 5MB (DoS prevention)
+  }
+});
 
 const app = express();
+
+// Security: Rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many requests, please try again later.' }
+});
+
+// Apply rate limiting to all requests
+app.use(limiter);
 const PORT = process.env.PORT || 3000;
 
 // Middleware

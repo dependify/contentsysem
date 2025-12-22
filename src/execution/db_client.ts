@@ -22,6 +22,14 @@ class DatabaseClient {
     let sslConfig: any = false;
     const sslMode = connectionString.match(/sslmode=(\w+)/)?.[1];
 
+    // Check for placeholder values
+    if (connectionString.includes('@host:5432') || connectionString.includes('username:password')) {
+      console.error('❌ CRITICAL ERROR: DATABASE_URL contains placeholder values.');
+      console.error('   Please configure your actual database credentials in your environment variables.');
+      console.error('   Current (masked): ' + connectionString.replace(/:[^:@]*@/, ':****@'));
+      process.exit(1);
+    }
+
     // Remove sslmode from connection string to avoid conflicts
     connectionString = connectionString.replace(/[?&]sslmode=\w+/g, '');
     // Clean up any dangling ? or &
