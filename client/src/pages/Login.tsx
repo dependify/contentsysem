@@ -38,15 +38,20 @@ export default function Login() {
         <h2 className="text-2xl font-bold text-white mb-6 text-center">Sign In to ContentSys</h2>
         
         {error && (
-          <div className="bg-red-900/50 text-red-200 p-3 rounded mb-4 text-sm">
+          <div
+            className="bg-red-900/50 text-red-200 p-3 rounded mb-4 text-sm"
+            role="alert"
+            aria-live="polite"
+          >
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">Email</label>
             <input
+              id="email"
               type="email"
               required
               className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -55,8 +60,9 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">Password</label>
             <input
+              id="password"
               type="password"
               required
               className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
