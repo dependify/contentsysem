@@ -9,6 +9,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
   const [queue, setQueue] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [editingPost, setEditingPost] = useState<number | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
 
   const fetchQueue = () => {
     api.get(`/queue/status/${tenantId}`)
@@ -24,7 +25,8 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) return;
+    if (!title.trim()) return;
+    setIsAdding(true);
     try {
       await api.post('/content/add', { 
         tenant_id: tenantId, 
@@ -35,6 +37,8 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
     } catch (err) {
       console.error(err);
       alert('Failed to add content');
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -61,19 +65,23 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
       {/* Add Content */}
       <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
         <form onSubmit={handleAdd} className="flex gap-4">
+          <label htmlFor="blog-title" className="sr-only">Blog Title</label>
           <input
+            id="blog-title"
             type="text"
             placeholder="Enter blog title to generate..."
             className="flex-1 bg-gray-900 border border-gray-700 rounded p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
             value={title}
             onChange={e => setTitle(e.target.value)}
+            disabled={isAdding}
           />
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded font-medium flex items-center gap-2"
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/70 disabled:cursor-not-allowed text-white px-6 py-3 rounded font-medium flex items-center gap-2"
+            disabled={isAdding || !title.trim()}
           >
-            <Plus size={20} />
-            Queue Content
+            {isAdding ? <RefreshCw size={20} className="animate-spin" /> : <Plus size={20} />}
+            {isAdding ? 'Queueing...' : 'Queue Content'}
           </button>
         </form>
       </div>
@@ -128,6 +136,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
                       onClick={() => setEditingPost(item.id)}
                       className="text-gray-400 hover:text-white"
                       title="Edit Content"
+                      aria-label={`Edit ${item.title}`}
                     >
                       <Edit2 size={18} />
                     </button>
@@ -138,6 +147,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
                       onClick={() => handlePublish(item.id)}
                       className="text-green-400 hover:text-green-300"
                       title="Approve & Publish"
+                      aria-label={`Approve and Publish ${item.title}`}
                     >
                       <Send size={18} />
                     </button>
@@ -149,6 +159,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-indigo-400 hover:text-indigo-300 text-sm font-medium"
+                      aria-label={`View Post: ${item.title} (opens in new tab)`}
                     >
                       View Post
                     </a>
