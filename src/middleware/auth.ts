@@ -32,8 +32,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   if (!validApiKey) {
-    console.warn('[Security] No CONTENTSYS_API_KEY set. Allowing request but this is insecure.');
-    return next(); // Dev mode only
+    console.error('[Security] No CONTENTSYS_API_KEY set. Failing closed.');
+    return res.status(500).json({ success: false, error: 'Server Security Misconfiguration' });
   }
 
   return res.status(401).json({
