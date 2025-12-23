@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   // Skip auth for public routes
-  if (req.path === '/health' || req.path === '/api/init' || req.path.startsWith('/api/auth')) {
+  if (req.path === '/health' || req.path.startsWith('/api/auth')) {
     return next();
   }
 

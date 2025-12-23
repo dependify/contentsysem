@@ -139,20 +139,6 @@ app.get('/health', async (req, res) => {
   res.status(httpStatus).json(health);
 });
 
-// Initialize database schema
-app.post('/api/init', async (req, res) => {
-  try {
-    await db.initializeSchema();
-    res.json({ success: true, message: 'Database schema initialized' });
-  } catch (error) {
-    console.error('Schema initialization error:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
 // Blog Post Management
 app.get('/api/posts/:id', async (req, res) => {
   try {
