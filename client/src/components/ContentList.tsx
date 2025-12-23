@@ -2,13 +2,14 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { format } from 'date-fns';
-import { Plus, RefreshCw, CheckCircle, XCircle, Clock, Edit2, Send, AlertCircle } from 'lucide-react';
+import { Plus, RefreshCw, CheckCircle, XCircle, Clock, Edit2, Send, AlertCircle, Loader2 } from 'lucide-react';
 import PostEditor from '../pages/PostEditor';
 
 export default function ContentList({ tenantId }: { tenantId: number }) {
   const [queue, setQueue] = useState<any[]>([]);
   const [title, setTitle] = useState('');
   const [editingPost, setEditingPost] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchQueue = () => {
     api.get(`/queue/status/${tenantId}`)
@@ -25,6 +26,8 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) return;
+
+    setIsSubmitting(true);
     try {
       await api.post('/content/add', { 
         tenant_id: tenantId, 
@@ -35,6 +38,8 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
     } catch (err) {
       console.error(err);
       alert('Failed to add content');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,6 +68,7 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
         <form onSubmit={handleAdd} className="flex gap-4">
           <input
             type="text"
+            aria-label="Blog post title"
             placeholder="Enter blog title to generate..."
             className="flex-1 bg-gray-900 border border-gray-700 rounded p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
             value={title}
@@ -70,10 +76,11 @@ export default function ContentList({ tenantId }: { tenantId: number }) {
           />
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded font-medium flex items-center gap-2"
+            disabled={isSubmitting}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            <Plus size={20} />
-            Queue Content
+            {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
+            {isSubmitting ? 'Queueing...' : 'Queue Content'}
           </button>
         </form>
       </div>
