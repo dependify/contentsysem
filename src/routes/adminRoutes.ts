@@ -23,13 +23,28 @@ router.get('/prompts', (req: Request, res: Response) => {
 // Get prompt content
 router.get('/prompts/:filename', (req: Request, res: Response) => {
   try {
-    const filePath = path.join(DIRECTIVES_DIR, req.params.filename);
+    const filename = req.params.filename;
+    // Prevent directory traversal
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return res.status(400).json({ success: false, error: 'Invalid filename' });
+    }
+
+    const filePath = path.join(DIRECTIVES_DIR, filename);
+
+    // Double check resolved path is within DIRECTIVES_DIR
+    const resolvedPath = path.resolve(filePath);
+    const resolvedDir = path.resolve(DIRECTIVES_DIR);
+    if (!resolvedPath.startsWith(resolvedDir)) {
+         return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ success: false, error: 'File not found' });
     }
     const content = fs.readFileSync(filePath, 'utf-8');
     res.json({ success: true, content });
   } catch (error) {
+    console.error('File read error:', error);
     res.status(500).json({ success: false, error: 'Failed to read file' });
   }
 });
@@ -38,13 +53,29 @@ router.get('/prompts/:filename', (req: Request, res: Response) => {
 router.post('/prompts/:filename', (req: Request, res: Response) => {
   try {
     const { content } = req.body;
-    const filePath = path.join(DIRECTIVES_DIR, req.params.filename);
+    const filename = req.params.filename;
+
+    // Prevent directory traversal
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return res.status(400).json({ success: false, error: 'Invalid filename' });
+    }
+
+    const filePath = path.join(DIRECTIVES_DIR, filename);
+
+    // Double check resolved path is within DIRECTIVES_DIR
+    const resolvedPath = path.resolve(filePath);
+    const resolvedDir = path.resolve(DIRECTIVES_DIR);
+    if (!resolvedPath.startsWith(resolvedDir)) {
+         return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ success: false, error: 'File not found' });
     }
     fs.writeFileSync(filePath, content, 'utf-8');
     res.json({ success: true, message: 'Prompt updated' });
   } catch (error) {
+    console.error('File write error:', error);
     res.status(500).json({ success: false, error: 'Failed to save file' });
   }
 });
