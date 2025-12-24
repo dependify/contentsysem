@@ -62,6 +62,8 @@ export default function Sidebar({ isAdmin = false }: SidebarProps) {
     const NavItemComponent = ({ item }: { item: NavItem }) => (
         <NavLink
             to={item.path}
+            title={isCollapsed ? item.label : undefined}
+            aria-label={isCollapsed ? item.label : undefined}
             className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive
                     ? 'bg-indigo-600 text-white'
