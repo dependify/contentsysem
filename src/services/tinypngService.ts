@@ -3,7 +3,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
-const TINIFY_API_KEY = process.env.TINIFY_API_KEY || '5kQmsjVc88MsPyTSfgg4qHXyS2JhsZsg';
+const TINIFY_API_KEY = process.env.TINIFY_API_KEY;
 const TINIFY_API_URL = 'https://api.tinify.com/shrink';
 
 interface CompressionResult {
@@ -23,6 +23,18 @@ interface CompressionResult {
  */
 export async function compressImage(inputPath: string, outputPath?: string): Promise<CompressionResult> {
     const output = outputPath || inputPath;
+
+    if (!TINIFY_API_KEY) {
+        console.warn('[TinyPNG] No API key configured. Skipping compression.');
+        return {
+            success: false,
+            originalSize: 0,
+            compressedSize: 0,
+            savings: 0,
+            outputPath: output,
+            error: 'No API key configured'
+        };
+    }
 
     try {
         // Read the image file
