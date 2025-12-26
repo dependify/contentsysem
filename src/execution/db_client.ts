@@ -5,24 +5,24 @@ dotenv.config();
 
 // PostgreSQL connection pool for ContentSys database
 class DatabaseClient {
-  private pool: Pool;
+  private pool: Pool | null = null;
+  private configError: string | null = null;
 
   constructor() {
     let connectionString = process.env.DATABASE_URL || '';
     const isProduction = process.env.NODE_ENV === 'production';
 
-    // Security Check: Fail if using placeholder values in production or if URL is missing
+    // Security Check: Detect placeholder values or missing URL
     if (!connectionString) {
-      console.error('❌ Critical Error: DATABASE_URL is not defined.');
-      if (isProduction) {
-        throw new Error('DATABASE_URL environment variable is required in production.');
-      }
+      this.configError = 'DATABASE_URL is not defined.';
+    } else if (connectionString.includes('@host:5432') || connectionString.includes('username:password')) {
+      this.configError = 'Invalid DATABASE_URL: Placeholder values detected (username, password, or host).';
     }
 
-    if (connectionString.includes('@host:5432') || connectionString.includes('username:password')) {
-      console.error('❌ Critical Error: DATABASE_URL contains placeholder values (username, password, or host).');
-      console.error('   Please update your environment variables with the actual database credentials.');
-      throw new Error('Invalid DATABASE_URL: Placeholder values detected.');
+    if (this.configError) {
+      console.error(`❌ DB Config Error: ${this.configError}`);
+      console.error('   The application will start in DEGRADED mode. Database features will be disabled.');
+      return; // Skip pool initialization
     }
 
     // For cloud databases with self-signed certs, we need to disable TLS verification
@@ -63,6 +63,10 @@ class DatabaseClient {
 
   // Execute a query with parameters
   async query(text: string, params?: any[]): Promise<any> {
+    if (this.configError || !this.pool) {
+      throw new Error(`Database unavailable: ${this.configError || 'Pool not initialized'}`);
+    }
+
     const client = await this.pool.connect();
     try {
       const result = await client.query(text, params);
@@ -83,6 +87,10 @@ class DatabaseClient {
 
   // Initialize database schema
   async initializeSchema(): Promise<void> {
+    if (this.configError || !this.pool) {
+      console.warn('⚠️  Skipping schema initialization: Database configuration is invalid.');
+      return;
+    }
     const schema = `
       -- Users (Admin & Clients)
       CREATE TABLE IF NOT EXISTS users (
@@ -331,7 +339,9 @@ class DatabaseClient {
 
   // Close the connection pool
   async close(): Promise<void> {
-    await this.pool.end();
+    if (this.pool) {
+      await this.pool.end();
+    }
   }
 }
 
