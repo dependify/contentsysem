@@ -39,11 +39,34 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/')
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname)
+    // Sanitize filename to prevent path traversal and collision
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'upload-' + uniqueSuffix + ext);
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    // Allowed extensions
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|txt|md|json/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    // Mimetype check
+    const mimetype = allowedTypes.test(file.mimetype) ||
+                     file.mimetype === 'application/pdf' ||
+                     file.mimetype === 'text/plain' ||
+                     file.mimetype === 'text/markdown' ||
+                     file.mimetype === 'application/json';
+
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
+    }
+  }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -565,7 +588,9 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Start the server
-startServer();
+// Start the server only if executed directly
+if (require.main === module) {
+  startServer();
+}
 
 export { app };
