@@ -11,6 +11,20 @@ class DatabaseClient {
     let connectionString = process.env.DATABASE_URL || '';
     const isProduction = process.env.NODE_ENV === 'production';
 
+    // Security Check: Fail if using placeholder values in production or if URL is missing
+    if (!connectionString) {
+      console.error('❌ Critical Error: DATABASE_URL is not defined.');
+      if (isProduction) {
+        throw new Error('DATABASE_URL environment variable is required in production.');
+      }
+    }
+
+    if (connectionString.includes('@host:5432') || connectionString.includes('username:password')) {
+      console.error('❌ Critical Error: DATABASE_URL contains placeholder values (username, password, or host).');
+      console.error('   Please update your environment variables with the actual database credentials.');
+      throw new Error('Invalid DATABASE_URL: Placeholder values detected.');
+    }
+
     // For cloud databases with self-signed certs, we need to disable TLS verification
     // This is safe for trusted cloud providers (Coolify, Railway, Render, Heroku, Supabase, etc.)
     if (isProduction || process.env.DATABASE_SSL === 'true' || process.env.DATABASE_SSL === '1') {
