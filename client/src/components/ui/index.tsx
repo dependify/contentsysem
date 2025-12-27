@@ -544,6 +544,9 @@ export function Toggle({ checked, onChange, label, disabled }: ToggleProps) {
         <label className="flex items-center gap-3 cursor-pointer">
             <button
                 type="button"
+                role="switch"
+                aria-checked={checked}
+                aria-label={label}
                 className={cn(checked ? 'toggle-active' : 'toggle', disabled && 'opacity-50 cursor-not-allowed')}
                 onClick={() => !disabled && onChange(!checked)}
                 disabled={disabled}
@@ -608,11 +611,12 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
     }
 
     return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" role="navigation" aria-label="Pagination">
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="btn btn-ghost btn-icon"
+                aria-label="Previous page"
             >
                 <ChevronLeft size={16} />
             </button>
@@ -625,17 +629,20 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
                             'btn btn-icon',
                             page === currentPage ? 'bg-indigo-600 text-white' : 'btn-ghost'
                         )}
+                        aria-label={`Page ${page}`}
+                        aria-current={page === currentPage ? 'page' : undefined}
                     >
                         {page}
                     </button>
                 ) : (
-                    <span key={i} className="px-2 text-gray-500">{page}</span>
+                    <span key={i} className="px-2 text-gray-500" aria-hidden="true">{page}</span>
                 )
             ))}
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className="btn btn-ghost btn-icon"
+                aria-label="Next page"
             >
                 <ChevronRight size={16} />
             </button>
