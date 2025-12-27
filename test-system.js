@@ -60,7 +60,7 @@ async function testDatabase() {
     if (tables.rows.length > 0) {
       console.log(`   Tables found: ${tables.rows.map(r => r.table_name).join(', ')}`);
     } else {
-      console.log('   ⚠️  No tables found. Run POST /api/init to create schema.');
+      console.log('   ⚠️  No tables found. Run npm run db:init to create schema.');
     }
     
     client.release();
@@ -213,7 +213,7 @@ async function runTests() {
     console.log('\n🎉 All core tests passed! System is ready.');
     console.log('\nNext steps:');
     console.log('1. Start the API server: npm run dev');
-    console.log('2. Initialize database: POST http://localhost:3000/api/init');
+    console.log('2. Initialize database: npm run db:init');
     console.log('3. Create a tenant and start generating content!');
   } else {
     console.log('\n⚠️  Some tests failed. Please check your configuration.');
