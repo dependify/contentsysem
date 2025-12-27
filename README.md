@@ -38,8 +38,7 @@ cp .env.example .env
 
 3. **Initialize the database:**
 ```bash
-npm run dev
-# POST to http://localhost:3000/api/init
+npm run db:init
 ```
 
 4. **Start the worker:**

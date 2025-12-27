@@ -52,8 +52,8 @@ try {
 console.log('🎉 Setup completed!');
 console.log('\nNext steps:');
 console.log('1. Edit .env file with your API keys');
-console.log('2. Start the API server: npm run dev');
-console.log('3. Initialize database: POST to http://localhost:3000/api/init');
+console.log('2. Initialize database: npm run db:init');
+console.log('3. Start the server: npm run dev');
 console.log('4. Start the worker: npm run worker');
 console.log('5. Create a tenant and start generating content!');
 console.log('\nFor more information, see README.md');

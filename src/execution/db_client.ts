@@ -9,6 +9,17 @@ class DatabaseClient {
 
   constructor() {
     let connectionString = process.env.DATABASE_URL || '';
+
+    // Validate that DATABASE_URL is not using placeholder values
+    if (!connectionString || connectionString.includes('postgres://username:password') || connectionString.includes('@host:5432')) {
+      console.error('❌ CRITICAL ERROR: Invalid DATABASE_URL configuration.');
+      console.error('It appears you are using the default placeholder connection string.');
+      console.error('Please update your environment variables with valid PostgreSQL credentials.');
+      // Throwing error here will be caught by the process handler or crash the app immediately
+      // which is better than obscure connection errors.
+      throw new Error('Invalid DATABASE_URL: Placeholder values detected. Please configure a valid database connection.');
+    }
+
     const isProduction = process.env.NODE_ENV === 'production';
 
     // For cloud databases with self-signed certs, we need to disable TLS verification

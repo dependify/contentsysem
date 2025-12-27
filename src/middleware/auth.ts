@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   // Skip auth for public routes
-  if (req.path === '/health' || req.path === '/api/init' || req.path.startsWith('/api/auth')) {
+  if (req.path === '/health' || req.path.startsWith('/api/auth')) {
     return next();
   }
 
@@ -32,8 +32,11 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   if (!validApiKey) {
-    console.warn('[Security] No CONTENTSYS_API_KEY set. Allowing request but this is insecure.');
-    return next(); // Dev mode only
+    console.error('[Security] No CONTENTSYS_API_KEY set. Denying request.');
+    return res.status(500).json({
+      success: false,
+      error: 'Server configuration error: Missing API Key'
+    });
   }
 
   return res.status(401).json({
